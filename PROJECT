@@ -1,0 +1,37 @@
+domain: replicated.com
+layout:
+- go.kubebuilder.io/v3
+plugins:
+  manifests.sdk.operatorframework.io/v2: {}
+  scorecard.sdk.operatorframework.io/v2: {}
+projectName: kgrid
+repo: github.com/replicatedhq/kgrid
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: replicated.com
+  group: kgrid
+  kind: Application
+  path: github.com/replicatedhq/kgrid/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: replicated.com
+  group: kgrid
+  kind: Grid
+  path: github.com/replicatedhq/kgrid/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: replicated.com
+  group: kgrid
+  kind: Test
+  path: github.com/replicatedhq/kgrid/api/v1alpha1
+  version: v1alpha1
+version: "3"

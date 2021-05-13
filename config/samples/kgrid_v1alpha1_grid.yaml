@@ -1,0 +1,7 @@
+apiVersion: kgrid.replicated.com/v1alpha1
+kind: Grid
+metadata:
+  name: grid-sample
+spec:
+  # Add fields here
+  foo: bar
