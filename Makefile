@@ -76,8 +76,14 @@ help: ## Display this help.
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
-generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+generate: controller-gen client-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+	$(CLIENT_GEN) \
+	--output-package=github.com/replicatedhq/kgrid/pkg/client \
+	--clientset-name kgridclientset \
+	--input kgrid/v1alpha1 \
+	--input-base github.com/replicatedhq/kgrid/apis \
+	-h hack/boilerplate.go.txt
 
 fmt: ## Run go fmt against code.
 	go fmt ./...
@@ -198,3 +204,12 @@ catalog-build: opm ## Build a catalog image.
 .PHONY: catalog-push
 catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
+
+.PHONY: client-gen
+client-gen:
+ifeq (, $(shell which client-gen))
+	go get k8s.io/code-generator/cmd/client-gen@v0.21.1
+CLIENT_GEN=$(shell go env GOPATH)/bin/client-gen
+else
+CLIENT_GEN=$(shell which client-gen)
+endif

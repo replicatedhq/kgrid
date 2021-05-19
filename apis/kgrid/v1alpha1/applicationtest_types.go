@@ -23,42 +23,44 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// TestSpec defines the desired state of Test
-type TestSpec struct {
+// ApplicationTestSpec defines the desired state of ApplicationTest
+type ApplicationTestSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of Test. Edit test_types.go to remove/update
+	// Foo is an example field of ApplicationTest. Edit applicationtest_types.go to remove/update
 	Foo string `json:"foo,omitempty"`
 }
 
-// TestStatus defines the observed state of Test
-type TestStatus struct {
+// ApplicationTestStatus defines the observed state of ApplicationTest
+type ApplicationTestStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+genclient
+//+k8s:openapi-gen=true
 
-// Test is the Schema for the tests API
-type Test struct {
+// ApplicationTest is the Schema for the applicationtests API
+type ApplicationTest struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   TestSpec   `json:"spec,omitempty"`
-	Status TestStatus `json:"status,omitempty"`
+	Spec   ApplicationTestSpec   `json:"spec,omitempty"`
+	Status ApplicationTestStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// TestList contains a list of Test
-type TestList struct {
+// ApplicationTestList contains a list of ApplicationTest
+type ApplicationTestList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Test `json:"items"`
+	Items           []ApplicationTest `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Test{}, &TestList{})
+	SchemeBuilder.Register(&ApplicationTest{}, &ApplicationTestList{})
 }

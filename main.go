@@ -31,7 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	kgridv1alpha1 "github.com/replicatedhq/kgrid/api/v1alpha1"
+	kgridv1alpha1 "github.com/replicatedhq/kgrid/apis/kgrid/v1alpha1"
 	"github.com/replicatedhq/kgrid/controllers"
 	//+kubebuilder:scaffold:imports
 )
@@ -94,12 +94,12 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Grid")
 		os.Exit(1)
 	}
-	if err = (&controllers.TestReconciler{
+	if err = (&controllers.ApplicationTestReconciler{
 		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Test"),
+		Log:    ctrl.Log.WithName("controllers").WithName("ApplicationTest"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Test")
+		setupLog.Error(err, "unable to create controller", "controller", "ApplicationTest")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

@@ -35,6 +35,32 @@ rules:
 - apiGroups:
   - kgrid.replicated.com
   resources:
+  - applicationtests
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kgrid.replicated.com
+  resources:
+  - applicationtests/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - kgrid.replicated.com
+  resources:
+  - applicationtests/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - kgrid.replicated.com
+  resources:
   - grids
   verbs:
   - create
@@ -54,32 +80,6 @@ rules:
   - kgrid.replicated.com
   resources:
   - grids/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - kgrid.replicated.com
-  resources:
-  - tests
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - kgrid.replicated.com
-  resources:
-  - tests/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - kgrid.replicated.com
-  resources:
-  - tests/status
   verbs:
   - get
   - patch

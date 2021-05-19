@@ -6,20 +6,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: tests.kgrid.replicated.com
+  name: grids.kgrid.replicated.com
 spec:
   group: kgrid.replicated.com
   names:
-    kind: Test
-    listKind: TestList
-    plural: tests
-    singular: test
+    kind: Grid
+    listKind: GridList
+    plural: grids
+    singular: grid
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Test is the Schema for the tests API
+        description: Grid is the Schema for the grids API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -34,15 +34,10 @@ spec:
           metadata:
             type: object
           spec:
-            description: TestSpec defines the desired state of Test
-            properties:
-              foo:
-                description: Foo is an example field of Test. Edit test_types.go to
-                  remove/update
-                type: string
+            description: GridSpec defines the desired state of Grid
             type: object
           status:
-            description: TestStatus defines the observed state of Test
+            description: GridStatus defines the observed state of Grid
             type: object
         type: object
     served: true
