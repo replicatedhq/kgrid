@@ -17,19 +17,29 @@ limitations under the License.
 package v1alpha1
 
 import (
+	kotsv1beta1 "github.com/replicatedhq/kots/kotskinds/apis/kots/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+type KOTS struct {
+	Clusters       []string                 `json:"clusters"`
+	Version        string                   `json:"version"`
+	AppSlug        string                   `json:"appSlug"`
+	LicenseID      string                   `json:"licenseID"`
+	SkipPreflights bool                     `json:"skipPreflights"`
+	Namespace      string                   `json:"namespace"`
+	ConfigValues   kotsv1beta1.ConfigValues `json:"configValues"`
+}
+
 // ApplicationSpec defines the desired state of Application
 type ApplicationSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of Application. Edit application_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	KOTS *KOTS `json:"kots,omitempty"`
 }
 
 // ApplicationStatus defines the observed state of Application
@@ -40,6 +50,8 @@ type ApplicationStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+genclient
+//+k8s:openapi-gen=true
 
 // Application is the Schema for the applications API
 type Application struct {

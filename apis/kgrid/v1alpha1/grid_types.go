@@ -23,13 +23,24 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+type Cluster struct {
+	Name string `json:"name"`
+	EKS  *EKS   `json:"eks,omitempty"`
+}
+
+type EKS struct {
+	Region          string           `json:"region"`
+	Create          bool             `json:"create"`
+	AaccessKeyID    ValueOrValueFrom `json:"accessKeyId"`
+	SecretAccessKey ValueOrValueFrom `json:"secretAccessKey"`
+}
+
 // GridSpec defines the desired state of Grid
 type GridSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of Grid. Edit grid_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	Clusters []Cluster `json:"clusters,omitempty"`
 }
 
 // GridStatus defines the observed state of Grid
@@ -40,6 +51,8 @@ type GridStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+genclient
+//+k8s:openapi-gen=true
 
 // Grid is the Schema for the grids API
 type Grid struct {

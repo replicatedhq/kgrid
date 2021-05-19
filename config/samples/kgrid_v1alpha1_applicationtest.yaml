@@ -1,0 +1,7 @@
+apiVersion: kgrid.replicated.com/v1alpha1
+kind: ApplicationTest
+metadata:
+  name: applicationtest-sample
+spec:
+  # Add fields here
+  foo: bar

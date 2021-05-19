@@ -30,7 +30,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	kgridv1alpha1 "github.com/replicatedhq/kgrid/api/v1alpha1"
+	kgridv1alpha1 "github.com/replicatedhq/kgrid/apis/kgrid/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -61,6 +61,9 @@ var _ = BeforeSuite(func() {
 	cfg, err := testEnv.Start()
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
+
+	err = kgridv1alpha1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
 
 	err = kgridv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
