@@ -25,13 +25,15 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 type KOTS struct {
-	Clusters       []string                 `json:"clusters"`
-	Version        string                   `json:"version"`
-	AppSlug        string                   `json:"appSlug"`
-	LicenseID      string                   `json:"licenseID"`
-	SkipPreflights bool                     `json:"skipPreflights"`
-	Namespace      string                   `json:"namespace"`
-	ConfigValues   kotsv1beta1.ConfigValues `json:"configValues"`
+	Clusters        []string                 `json:"clusters"`
+	Version         string                   `json:"version"`
+	AppSlug         string                   `json:"appSlug"`
+	LicenseID       string                   `json:"licenseID"`
+	ChannelID       string                   `json:"channelID"`
+	ChannelSequence uint                     `json:"channelSequence"`
+	SkipPreflights  bool                     `json:"skipPreflights"`
+	Namespace       string                   `json:"namespace"`
+	ConfigValues    kotsv1beta1.ConfigValues `json:"configValues"`
 }
 
 // ApplicationSpec defines the desired state of Application

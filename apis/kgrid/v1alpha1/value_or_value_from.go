@@ -40,3 +40,25 @@ func (v *ValueOrValueFrom) GetVaultDetails() (*Vault, error) {
 
 	return nil, errors.New("No Vault secret configured")
 }
+
+func (v ValueOrValueFrom) String() string {
+	if v.Value == "" && v.ValueFrom == nil {
+		return ""
+	}
+
+	if v.Value != "" {
+		return v.Value
+	}
+
+	// TODO: +++++
+	// if v.ValueFrom.SecretKeyRef != nil {
+	// 	return os.Getenv(v.ValueFrom.OSEnv)
+	// }
+
+	// TODO: ++++ valut
+	// if v.ValueFrom.Vault {
+	// 	return v.ValueFrom.Vault.Secret
+	// }
+
+	return ""
+}

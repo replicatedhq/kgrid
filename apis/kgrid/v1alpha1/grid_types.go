@@ -30,6 +30,7 @@ type Cluster struct {
 
 type EKS struct {
 	Region          string           `json:"region"`
+	Version         string           `json:"version,omitempty"`
 	Create          bool             `json:"create"`
 	AaccessKeyID    ValueOrValueFrom `json:"accessKeyId"`
 	SecretAccessKey ValueOrValueFrom `json:"secretAccessKey"`
