@@ -8,11 +8,14 @@ require (
 	github.com/onsi/gomega v1.10.2
 	github.com/pkg/errors v0.9.1
 	github.com/replicatedhq/kots v1.41.1
+	github.com/replicatedhq/kubectl-grid v0.0.1
 	github.com/spf13/pflag v1.0.5
+	k8s.io/api v0.21.0
 	k8s.io/apimachinery v0.21.0
 	k8s.io/cli-runtime v0.20.5
-	k8s.io/client-go v0.21.0
+	k8s.io/client-go v11.0.0+incompatible
 	sigs.k8s.io/controller-runtime v0.8.3
+	sigs.k8s.io/yaml v1.2.0
 )
 
 replace (

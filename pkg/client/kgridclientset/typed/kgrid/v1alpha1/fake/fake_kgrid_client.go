@@ -31,10 +31,6 @@ func (c *FakeKgridV1alpha1) Applications(namespace string) v1alpha1.ApplicationI
 	return &FakeApplications{c, namespace}
 }
 
-func (c *FakeKgridV1alpha1) ApplicationTests(namespace string) v1alpha1.ApplicationTestInterface {
-	return &FakeApplicationTests{c, namespace}
-}
-
 func (c *FakeKgridV1alpha1) Grids(namespace string) v1alpha1.GridInterface {
 	return &FakeGrids{c, namespace}
 }

@@ -2,5 +2,4 @@
 resources:
 - kgrid_v1alpha1_application.yaml
 - kgrid_v1alpha1_grid.yaml
-- kgrid_v1alpha1_applicationtest.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

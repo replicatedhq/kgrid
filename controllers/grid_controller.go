@@ -38,9 +38,9 @@ type GridReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=kgrid.replicated.com,resources=grids,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=kgrid.replicated.com,resources=grids/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=kgrid.replicated.com,resources=grids/finalizers,verbs=update
+//+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=grids,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=grids/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=grids/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

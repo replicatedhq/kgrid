@@ -26,7 +26,6 @@ import (
 type KgridV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	ApplicationsGetter
-	ApplicationTestsGetter
 	GridsGetter
 }
 
@@ -37,10 +36,6 @@ type KgridV1alpha1Client struct {
 
 func (c *KgridV1alpha1Client) Applications(namespace string) ApplicationInterface {
 	return newApplications(c, namespace)
-}
-
-func (c *KgridV1alpha1Client) ApplicationTests(namespace string) ApplicationTestInterface {
-	return newApplicationTests(c, namespace)
 }
 
 func (c *KgridV1alpha1Client) Grids(namespace string) GridInterface {

@@ -19,6 +19,4 @@ package v1alpha1
 
 type ApplicationExpansion interface{}
 
-type ApplicationTestExpansion interface{}
-
 type GridExpansion interface{}
