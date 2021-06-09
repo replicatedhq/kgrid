@@ -100,10 +100,10 @@ test: manifests generate fmt vet ## Run tests.
 ##@ Build
 
 build: generate fmt vet ## Build manager binary.
-	go build -o bin/manager main.go
+	go build -o bin/manager cmd/manager/main.go
 
 run: manifests generate fmt vet ## Run a controller from your host.
-	go run ./main.go
+	go run ./cmd/manager/main.go
 
 docker-build: test ## Build docker image with the manager.
 	docker build -t ${IMG} .
@@ -213,3 +213,9 @@ CLIENT_GEN=$(shell go env GOPATH)/bin/client-gen
 else
 CLIENT_GEN=$(shell which client-gen)
 endif
+
+kgrid: fmt vet
+	go build -o bin/kgrid cmd/kgrid/main.go
+
+kgrid-test:
+	go test ./pkg/...
