@@ -16,7 +16,6 @@ func Apply(c *types.ClusterConfig, yamlDoc string) error {
 		return errors.Wrap(err, "failed to create temp file")
 	}
 	defer os.RemoveAll(kubeconfigFile.Name())
-	// fmt.Printf("++++++kubeconfig:%s\n", kubeconfigFile.Name())
 
 	if err := ioutil.WriteFile(kubeconfigFile.Name(), []byte(c.Kubeconfig), 0644); err != nil {
 		return errors.Wrap(err, "failed to create kubeconfig")

@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"crypto/md5"
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -246,8 +245,6 @@ func getGridSpecForTest(gridCluster *kgridv1alpha1.Cluster) *gridtypes.Grid {
 	if gridCluster.EKS != nil {
 		clusterSpec.EKS = &gridtypes.EKSSpec{}
 		if gridCluster.EKS.Create {
-			fmt.Printf("++++++cluster.EKS.AaccessKeyID:%#v\n", gridCluster.EKS.AaccessKeyID)
-			fmt.Printf("++++++cluster.EKS.SecretAccessKey:%#v\n", gridCluster.EKS.SecretAccessKey)
 			clusterSpec.EKS.NewCluster = &gridtypes.EKSNewClusterSpec{
 				Description: "",
 				Version:     gridCluster.EKS.Version,
@@ -274,9 +271,6 @@ func getGridSpecForTest(gridCluster *kgridv1alpha1.Cluster) *gridtypes.Grid {
 	}
 
 	g.Spec.Clusters = []*gridtypes.ClusterSpec{clusterSpec}
-
-	ttt, _ := json.MarshalIndent(g, "", "  ")
-	fmt.Printf("++++++++%s\n", ttt)
 
 	return g
 }
