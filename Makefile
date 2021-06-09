@@ -106,7 +106,7 @@ run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./cmd/manager/main.go
 
 docker-build: test ## Build docker image with the manager.
-	docker build -t ${IMG} .
+	docker build -f Dockerfile.manager -t ${IMG} .
 
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
