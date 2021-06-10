@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"crypto/md5"
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -36,8 +35,7 @@ import (
 
 	kgridv1alpha1 "github.com/replicatedhq/kgrid/apis/kgrid/v1alpha1"
 	"github.com/replicatedhq/kgrid/pkg/config"
-	"github.com/replicatedhq/kubectl-grid/pkg/grid/types"
-	gridtypes "github.com/replicatedhq/kubectl-grid/pkg/grid/types"
+	gridtypes "github.com/replicatedhq/kgrid/pkg/kgrid/grid/types"
 )
 
 // ApplicationReconciler reconciles a Application object
@@ -243,29 +241,27 @@ func getGridSpecForTest(gridCluster *kgridv1alpha1.Cluster) *gridtypes.Grid {
 		Spec: gridtypes.GridSpec{},
 	}
 
-	clusterSpec := &types.ClusterSpec{}
+	clusterSpec := &gridtypes.ClusterSpec{}
 	if gridCluster.EKS != nil {
-		clusterSpec.EKS = &types.EKSSpec{}
+		clusterSpec.EKS = &gridtypes.EKSSpec{}
 		if gridCluster.EKS.Create {
-			fmt.Printf("++++++cluster.EKS.AaccessKeyID:%#v\n", gridCluster.EKS.AaccessKeyID)
-			fmt.Printf("++++++cluster.EKS.SecretAccessKey:%#v\n", gridCluster.EKS.SecretAccessKey)
-			clusterSpec.EKS.NewCluster = &types.EKSNewClusterSpec{
+			clusterSpec.EKS.NewCluster = &gridtypes.EKSNewClusterSpec{
 				Description: "",
 				Version:     gridCluster.EKS.Version,
-				AccessKeyID: types.ValueOrValueFrom{
+				AccessKeyID: gridtypes.ValueOrValueFrom{
 					Value: gridCluster.EKS.AaccessKeyID.String(),
 				},
-				SecretAccessKey: types.ValueOrValueFrom{
+				SecretAccessKey: gridtypes.ValueOrValueFrom{
 					Value: gridCluster.EKS.SecretAccessKey.String(),
 				},
 				Region: gridCluster.EKS.Region,
 			}
 		} else {
-			clusterSpec.EKS.ExistingCluster = &types.EKSExistingClusterSpec{
-				AccessKeyID: types.ValueOrValueFrom{
+			clusterSpec.EKS.ExistingCluster = &gridtypes.EKSExistingClusterSpec{
+				AccessKeyID: gridtypes.ValueOrValueFrom{
 					Value: gridCluster.EKS.AaccessKeyID.String(),
 				},
-				SecretAccessKey: types.ValueOrValueFrom{
+				SecretAccessKey: gridtypes.ValueOrValueFrom{
 					Value: gridCluster.EKS.SecretAccessKey.String(),
 				},
 				ClusterName: gridCluster.Name,
@@ -274,10 +270,7 @@ func getGridSpecForTest(gridCluster *kgridv1alpha1.Cluster) *gridtypes.Grid {
 		}
 	}
 
-	g.Spec.Clusters = []*types.ClusterSpec{clusterSpec}
-
-	ttt, _ := json.MarshalIndent(g, "", "  ")
-	fmt.Printf("++++++++%s\n", ttt)
+	g.Spec.Clusters = []*gridtypes.ClusterSpec{clusterSpec}
 
 	return g
 }
