@@ -1,4 +1,4 @@
-name: deploy
+name: goreleaser
 on:
   push:
     tags:
