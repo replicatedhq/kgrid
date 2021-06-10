@@ -2,7 +2,6 @@ domain: replicated.com
 layout:
 - go.kubebuilder.io/v3
 multigroup: true
-namespaced: true
 plugins:
   manifests.sdk.operatorframework.io/v2: {}
   scorecard.sdk.operatorframework.io/v2: {}
