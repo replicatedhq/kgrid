@@ -46,6 +46,12 @@ jobs:
           path: bin/kgrid
 
 
+      - name: login to DockerHub
+        uses: docker/login-action@v1 
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
       - name: build local manager image
         uses: docker/build-push-action@v2.5.0
         with:
