@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	kgridv1alpha1 "github.com/replicatedhq/kgrid/apis/kgrid/v1alpha1"
+	"github.com/replicatedhq/kgrid/pkg/buildversion"
 	"github.com/replicatedhq/kgrid/pkg/config"
 	gridtypes "github.com/replicatedhq/kgrid/pkg/kgrid/grid/types"
 )
@@ -169,13 +170,11 @@ func getTestPodSpec(testName string, gridCluster *kgridv1alpha1.Cluster, app *kg
 			RestartPolicy: corev1.RestartPolicyNever,
 			Containers: []corev1.Container{
 				{
-					// TOOD: ++++++ real imagename
-					Image:           "ttl.sh/kubectl-grid/kubectl-grid:12h",
+					Image:           fmt.Sprintf("replicated/kgrid:%s", buildversion.ImageTag()),
 					ImagePullPolicy: corev1.PullAlways,
 					Name:            "grid",
-					Command:         []string{"kubectl"},
+					Command:         []string{"kgrid"},
 					Args: []string{
-						"grid",
 						"create",
 						"--from-yaml",
 						"/kgrid-specs/grid.yaml",
