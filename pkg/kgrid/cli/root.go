@@ -38,6 +38,7 @@ func RootCmd() *cobra.Command {
 
 	cmd.PersistentFlags().String("config-file", filepath.Join(homeDir(), ".grid", "config"), "Path to the grid config file to store current grids")
 
+	cmd.AddCommand(VersionCmd())
 	cmd.AddCommand(CreateCmd())
 	cmd.AddCommand(GetCmd())
 	cmd.AddCommand(DescribeCmd())

@@ -1,0 +1,39 @@
+project_name: kgrid
+release:
+  github:
+    owner: replicatedhq
+    name: kgrid
+  prerelease: "true"
+builds:
+  - id: kgrid
+    goos:
+    - linux
+    - darwin
+    goarch:
+    - amd64
+    env:
+      - CGO_ENABLED=0
+      - GO111MODULE=on
+    main: cmd/kgrid/main.go
+    ldflags: -s -w
+      -X github.com/replicatedhq/kgrid/pkg/buildversion.version={{.Version}}
+      -X github.com/replicatedhq/kgrid/pkg/buildversion.gitSHA={{.FullCommit}}
+      -X github.com/replicatedhq/kgrid/pkg/buildversion.buildTime={{.Date}}
+    binary: kgrid
+    hooks: {}
+
+archives:
+  - id: kgrid
+    builds:
+      - kgrid
+    format: tar.gz
+    name_template: '{{ .Binary }}_{{ .Os }}_{{ .Arch }}'
+    files:
+      - licence*
+      - LICENCE*
+      - license*
+      - LICENSE*
+      - readme*
+      - README*
+      - changelog*
+      - CHANGELOG*

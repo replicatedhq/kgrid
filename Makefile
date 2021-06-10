@@ -3,7 +3,20 @@
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
 # - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION ?= 0.0.1
+
+VERSION_PACKAGE = github.com/replicatedhq/kgrid/pkg/buildversion
+VERSION ?=`git describe --tags --dirty || echo "v0.0.0"`
+GIT_SHA ?=`git rev-parse HEAD || echo ""`
+DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"`
+
+define LDFLAGS
+-ldflags "\
+	-s -w \
+	-X ${VERSION_PACKAGE}.version=${VERSION} \
+	-X ${VERSION_PACKAGE}.gitSHA=${GIT_SHA} \
+	-X ${VERSION_PACKAGE}.buildTime=${DATE} \
+"
+endef
 
 # CHANNELS define the bundle channels used in the bundle.
 # Add a new line here if you would like to change its default config. (E.g CHANNELS = "preview,fast,stable")
@@ -36,7 +49,9 @@ IMAGE_TAG_BASE ?= replicated.com/kgrid
 BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
 
 # Image URL to use all building/pushing image targets
-IMG ?= localhost:32000/kgrid/controller:latest
+IMG ?= localhost:32000/kgrid/controller:${VERSION}-local
+IMG_KGRID ?= localhost:32000/kgrid/kgird:${VERSION}-local
+
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
 
@@ -100,7 +115,7 @@ test: manifests generate fmt vet ## Run tests.
 ##@ Build
 
 build: generate fmt vet ## Build manager binary.
-	go build -o bin/manager cmd/manager/main.go
+	go build ${LDFLAGS} -o bin/manager cmd/manager/main.go
 
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./cmd/manager/main.go
@@ -215,7 +230,10 @@ CLIENT_GEN=$(shell which client-gen)
 endif
 
 kgrid: fmt vet
-	go build -o bin/kgrid cmd/kgrid/main.go
+	go build ${LDFLAGS} -o bin/kgrid cmd/kgrid/main.go
 
 kgrid-test:
 	go test ./pkg/...
+
+docker-build-kgrid: test ## Build docker image with the manager.
+	docker build -f Dockerfile.kgrid -t ${IMG_KGRID} .

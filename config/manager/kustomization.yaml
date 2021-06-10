@@ -13,4 +13,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: localhost:32000/kgrid/controller
-  newTag: latest
+  newTag: v0.0.0-local
