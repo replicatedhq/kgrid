@@ -1,4 +1,4 @@
-name: goreleaser
+name: release
 on:
   push:
     tags:
@@ -33,3 +33,37 @@ jobs:
         args: release --rm-dist --config .goreleaser.yaml
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  assets:
+    needs: goreleaser
+    runs-on: ubuntu-latest
+    steps:
+    - name: get the version
+      if: startsWith(github.ref, 'refs/tags/')
+      id: get_tag
+      shell: bash
+      run: echo ::set-output name=GIT_TAG::${GITHUB_REF/refs\/tags\//}
+
+    - name: get release
+      if: ${{ steps.get_tag.outputs.GIT_TAG != '' }}
+      id: get_release
+      uses: bruceadams/get-release@v1.2.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: make grid manifests
+      run: |
+        SEMVER=${GITHUB_REF:1}
+        IMG=replicated/kgrid-manager:${{ steps.get_tag.outputs.GIT_TAG }}
+        make bundle
+        tar czf ./kgrid-manifests.tar.gz -C ./ ./bundle
+
+    - name: upload manifest bundle
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: https://uploads.github.com/repos/replicatedhq/kgrid/releases/${{ steps.get_release.outputs.id }}/assets?name=kgrid-manifests.tar.gz
+        asset_path: ./kgrid-manifests.tar.gz
+        asset_name: kgrid-manifests.tar.gz
+        asset_content_type: application/gzip
