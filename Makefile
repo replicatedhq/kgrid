@@ -12,7 +12,7 @@ SHELL = /usr/bin/env bash -o pipefail
 
 VERSION_PACKAGE = github.com/replicatedhq/kgrid/pkg/buildversion
 VERSION ?=`git describe --tags --dirty || echo "v0.0.0"`
-SEMVER ?= `git describe --tags --dirty || echo "v0.0.0" | tr -d 'v'`
+SEMVER ?= `(git describe --tags --dirty || echo "v0.0.0") | tr -d 'v'`
 GIT_SHA ?=`git rev-parse HEAD || echo ""`
 DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"`
 
@@ -169,7 +169,7 @@ endef
 bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
 	operator-sdk generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
-	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version ${SEMVER} $(BUNDLE_METADATA_OPTS)
+	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(SEMVER) $(BUNDLE_METADATA_OPTS)
 	operator-sdk bundle validate ./bundle
 
 .PHONY: bundle-build
