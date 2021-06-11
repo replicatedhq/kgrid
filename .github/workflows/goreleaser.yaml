@@ -68,8 +68,9 @@ jobs:
 
     - name: make grid manifests
       run: |
-        SEMVER=${GITHUB_REF:1}
-        IMG=replicated/kgrid-manager:${{ steps.get_tag.outputs.GIT_TAG }}
+        set -x
+        export SEMVER=${GITHUB_REF:1}
+        export IMG=replicated/kgrid-manager:${{ steps.get_tag.outputs.GIT_TAG }}
         make bundle-asset
 
     - name: upload manifest bundle
