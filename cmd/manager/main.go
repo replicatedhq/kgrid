@@ -34,6 +34,7 @@ import (
 
 	kgridv1alpha1 "github.com/replicatedhq/kgrid/apis/kgrid/v1alpha1"
 	"github.com/replicatedhq/kgrid/controllers"
+	"github.com/replicatedhq/kgrid/pkg/buildversion"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -50,9 +51,11 @@ func init() {
 }
 
 func main() {
+	var version bool
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
+	flag.BoolVar(&version, "version", false, "Print version and exit.")
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
@@ -65,6 +68,11 @@ func main() {
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
+	if version {
+		fmt.Println(buildversion.Version())
+		os.Exit(0)
+	}
 
 	watchNamespace, err := getWatchNamespace()
 	if err != nil {

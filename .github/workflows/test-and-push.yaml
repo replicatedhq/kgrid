@@ -1,4 +1,4 @@
-name: build-test
+name: build-push
 
 on:
   push:
@@ -33,6 +33,9 @@ jobs:
 
 
       - run: make test build
+        env:
+          GIT_SHA: ${{ github.sha }}
+          VERSION: ${{ steps.get_tag.outputs.GIT_TAG }}
       - uses: actions/upload-artifact@v2.2.3
         with:
           name: manager
@@ -40,6 +43,9 @@ jobs:
 
 
       - run: make kgrid-test kgrid
+        env:
+          GIT_SHA: ${{ github.sha }}
+          VERSION: ${{ steps.get_tag.outputs.GIT_TAG }}
       - uses: actions/upload-artifact@v2.2.3
         with:
           name: kgrid
