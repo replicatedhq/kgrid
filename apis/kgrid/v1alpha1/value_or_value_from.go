@@ -1,7 +1,13 @@
 package v1alpha1
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/pkg/errors"
+	"github.com/replicatedhq/kgrid/pkg/config"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 type ValueOrValueFrom struct {
@@ -22,43 +28,45 @@ func (v *ValueOrValueFrom) IsEmpty() bool {
 	return true
 }
 
-// HasVaultSecret returns true if the ValueOrValueFrom
-// contains a Vault stanza
-func (v *ValueOrValueFrom) HasVaultSecret() bool {
-	if v.ValueFrom != nil {
-		return v.ValueFrom.Vault != nil
-	}
-	return false
-}
-
-// GetVaultDetails returns the configured Vault details for the
-// ValueOrValueFrom, or returns error if Vault stanza is missing
-func (v *ValueOrValueFrom) GetVaultDetails() (*Vault, error) {
-	if v.HasVaultSecret() {
-		return v.ValueFrom.Vault, nil
-	}
-
-	return nil, errors.New("No Vault secret configured")
-}
-
-func (v ValueOrValueFrom) String() string {
-	if v.Value == "" && v.ValueFrom == nil {
-		return ""
-	}
-
+func (v ValueOrValueFrom) String(ctx context.Context, namespace string) (string, error) {
 	if v.Value != "" {
-		return v.Value
+		return v.Value, nil
 	}
 
-	// TODO: +++++
-	// if v.ValueFrom.SecretKeyRef != nil {
-	// 	return os.Getenv(v.ValueFrom.OSEnv)
-	// }
+	if v.ValueFrom.SecretKeyRef != nil {
+		val, err := v.getValueFromSecret(ctx, namespace)
+		return val, errors.Wrap(err, "failed ot get value from secret")
+	}
 
 	// TODO: ++++ valut
 	// if v.ValueFrom.Vault {
 	// 	return v.ValueFrom.Vault.Secret
 	// }
 
-	return ""
+	return "", nil
+}
+
+func (v ValueOrValueFrom) getValueFromSecret(ctx context.Context, namespace string) (string, error) {
+	cfg, err := config.GetRESTConfig()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get config")
+	}
+
+	clientset, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get clientset")
+	}
+
+	secretKeyRefName := v.ValueFrom.SecretKeyRef.Name
+	secret, err := clientset.CoreV1().Secrets(namespace).Get(ctx, secretKeyRefName, metav1.GetOptions{})
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get secret")
+	}
+
+	keyName := v.ValueFrom.SecretKeyRef.Key
+	keyData, ok := secret.Data[keyName]
+	if !ok {
+		return "", fmt.Errorf("expected Secret \"%s\" to contain key \"%s\"", secretKeyRefName, keyName)
+	}
+	return string(keyData), nil
 }

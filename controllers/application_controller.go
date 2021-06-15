@@ -20,7 +20,6 @@ import (
 	"context"
 	"crypto/md5"
 	"fmt"
-	"os"
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -51,6 +50,7 @@ type ApplicationReconciler struct {
 //+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=applications/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",namespace=kgrid-system,resources=pods,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",namespace=kgrid-system,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="",namespace=kgrid-system,resources=secrets,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -123,7 +123,7 @@ func (r *ApplicationReconciler) createJob(ctx context.Context, req ctrl.Request)
 					return ctrl.Result{}, errors.Wrap(err, "failed to check if test exists")
 				}
 
-				configSpec, err := getKotsTestConfigMap(testName, &gridCluster, instance)
+				configSpec, err := getKotsTestConfigMap(ctx, testName, &gridCluster, instance)
 				if err != nil {
 					return ctrl.Result{}, errors.Wrap(err, "failed to build test configmap")
 				}
@@ -207,17 +207,22 @@ func getTestPodSpec(testName string, gridCluster *kgridv1alpha1.Cluster, app *kg
 	return podSpec
 }
 
-func getKotsTestConfigMap(testName string, gridCluster *kgridv1alpha1.Cluster, app *kgridv1alpha1.Application) (*corev1.ConfigMap, error) {
+func getKotsTestConfigMap(ctx context.Context, testName string, gridCluster *kgridv1alpha1.Cluster, app *kgridv1alpha1.Application) (*corev1.ConfigMap, error) {
 	configMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      testName,
-			Namespace: os.Getenv("POD_NAMESPACE"),
+			Namespace: app.Namespace,
 			Labels:    map[string]string{},
 		},
 		Data: map[string]string{},
 	}
 
-	gridYaml, err := yaml.Marshal(getGridSpecForTest(gridCluster))
+	gridSpec, err := getGridSpecForTest(ctx, app.Namespace, gridCluster)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to build gird spec")
+	}
+
+	gridYaml, err := yaml.Marshal(gridSpec)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to marshal gird spec")
 	}
@@ -232,12 +237,22 @@ func getKotsTestConfigMap(testName string, gridCluster *kgridv1alpha1.Cluster, a
 	return configMap, nil
 }
 
-func getGridSpecForTest(gridCluster *kgridv1alpha1.Cluster) *gridtypes.Grid {
+func getGridSpecForTest(ctx context.Context, namespace string, gridCluster *kgridv1alpha1.Cluster) (*gridtypes.Grid, error) {
 	g := &gridtypes.Grid{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: gridCluster.Name,
 		},
 		Spec: gridtypes.GridSpec{},
+	}
+
+	accessKeyID, err := gridCluster.EKS.AaccessKeyID.String(ctx, namespace)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get access key ID")
+	}
+
+	secretAccessKey, err := gridCluster.EKS.SecretAccessKey.String(ctx, namespace)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get secret access key")
 	}
 
 	clusterSpec := &gridtypes.ClusterSpec{}
@@ -248,20 +263,20 @@ func getGridSpecForTest(gridCluster *kgridv1alpha1.Cluster) *gridtypes.Grid {
 				Description: "",
 				Version:     gridCluster.EKS.Version,
 				AccessKeyID: gridtypes.ValueOrValueFrom{
-					Value: gridCluster.EKS.AaccessKeyID.String(),
+					Value: accessKeyID,
 				},
 				SecretAccessKey: gridtypes.ValueOrValueFrom{
-					Value: gridCluster.EKS.SecretAccessKey.String(),
+					Value: secretAccessKey,
 				},
 				Region: gridCluster.EKS.Region,
 			}
 		} else {
 			clusterSpec.EKS.ExistingCluster = &gridtypes.EKSExistingClusterSpec{
 				AccessKeyID: gridtypes.ValueOrValueFrom{
-					Value: gridCluster.EKS.AaccessKeyID.String(),
+					Value: accessKeyID,
 				},
 				SecretAccessKey: gridtypes.ValueOrValueFrom{
-					Value: gridCluster.EKS.SecretAccessKey.String(),
+					Value: secretAccessKey,
 				},
 				ClusterName: gridCluster.Name,
 				Region:      gridCluster.EKS.Region,
@@ -271,7 +286,7 @@ func getGridSpecForTest(gridCluster *kgridv1alpha1.Cluster) *gridtypes.Grid {
 
 	g.Spec.Clusters = []*gridtypes.ClusterSpec{clusterSpec}
 
-	return g
+	return g, nil
 }
 
 func getAppSpecForTest(app *kgridv1alpha1.Application) *gridtypes.Application {
