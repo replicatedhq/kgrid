@@ -103,5 +103,5 @@ jobs:
           tags: replicated/kgrid:${{ steps.get_tag.outputs.GIT_TAG }}
           context: .
           file: Dockerfile.kgrid
-          push: false
+          push: true
 
