@@ -1,0 +1,7 @@
+apiVersion: kgrid.replicated.com/v1alpha1
+kind: Version
+metadata:
+  name: version-sample
+spec:
+  # Add fields here
+  foo: bar
