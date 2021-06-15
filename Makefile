@@ -116,7 +116,7 @@ test: manifests generate fmt vet ## Run tests.
 ##@ Build
 
 build: generate fmt vet ## Build manager binary.
-	go build ${LDFLAGS} -o bin/manager cmd/manager/main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build ${LDFLAGS} -o bin/manager cmd/manager/main.go
 
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./cmd/manager/main.go
