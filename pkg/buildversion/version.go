@@ -23,5 +23,5 @@ func ShortSHA() string {
 }
 
 func ImageTag() string {
-	return fmt.Sprintf("%s-%s", Version(), ShortSHA())
+	return fmt.Sprintf("%s", Version())
 }
