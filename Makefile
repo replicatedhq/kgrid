@@ -56,8 +56,8 @@ IMAGE_TAG_BASE ?= replicated.com/kgrid
 BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:$(VERSION)
 
 # Image URL to use all building/pushing image targets
-IMG ?= localhost:32000/kgrid/controller:${VERSION}-local
-IMG_KGRID ?= localhost:32000/kgrid/kgird:${VERSION}-local
+IMG ?= localhost:32000/kgrid/controller:${VERSION}
+IMG_KGRID ?= localhost:32000/kgrid/kgird:${VERSION}
 
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"

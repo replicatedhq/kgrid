@@ -167,6 +167,9 @@ func getTestPodSpec(testName string, gridCluster *kgridv1alpha1.Cluster, app *kg
 			Name: testName,
 		},
 		Spec: corev1.PodSpec{
+			Affinity: &corev1.Affinity{
+				NodeAffinity: defaultKgridNodeAffinity(),
+			},
 			RestartPolicy: corev1.RestartPolicyNever,
 			Containers: []corev1.Container{
 				{
@@ -309,4 +312,31 @@ func getAppSpecForTest(app *kgridv1alpha1.Application) *gridtypes.Application {
 		},
 	}
 	return a
+}
+
+func defaultKgridNodeAffinity() *corev1.NodeAffinity {
+	return &corev1.NodeAffinity{
+		RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
+			NodeSelectorTerms: []corev1.NodeSelectorTerm{
+				{
+					MatchExpressions: []corev1.NodeSelectorRequirement{
+						{
+							Key:      "kubernetes.io/os",
+							Operator: corev1.NodeSelectorOpIn,
+							Values: []string{
+								"linux",
+							},
+						},
+						{
+							Key:      "kubernetes.io/arch",
+							Operator: corev1.NodeSelectorOpNotIn,
+							Values: []string{
+								"arm64",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
 }
