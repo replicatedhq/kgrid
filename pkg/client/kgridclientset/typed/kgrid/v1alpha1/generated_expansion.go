@@ -20,3 +20,5 @@ package v1alpha1
 type ApplicationExpansion interface{}
 
 type GridExpansion interface{}
+
+type VersionExpansion interface{}

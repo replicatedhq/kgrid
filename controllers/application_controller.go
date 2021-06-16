@@ -35,6 +35,7 @@ import (
 
 	kgridv1alpha1 "github.com/replicatedhq/kgrid/apis/kgrid/v1alpha1"
 	"github.com/replicatedhq/kgrid/pkg/buildversion"
+	kgridclientset "github.com/replicatedhq/kgrid/pkg/client/kgridclientset/typed/kgrid/v1alpha1"
 	"github.com/replicatedhq/kgrid/pkg/config"
 	gridtypes "github.com/replicatedhq/kgrid/pkg/kgrid/grid/types"
 )
@@ -76,14 +77,17 @@ func (r *ApplicationReconciler) createJob(ctx context.Context, req ctrl.Request)
 		if kuberneteserrors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
-		logger.Error(err, "failed to get application instance")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, errors.Wrap(err, "failed to get application instance")
 	}
 
-	err = createAppTests(ctx, instance.Namespace, instance, logger)
+	version, err := findVersionForApp(ctx, instance.Namespace, instance)
 	if err != nil {
-		logger.Error(err, "failed to get application instance")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, errors.Wrap(err, "failed to find version to test application with")
+	}
+
+	err = createAppTests(ctx, instance.Namespace, instance, version, logger)
+	if err != nil {
+		return ctrl.Result{}, errors.Wrap(err, "failed to get application instance")
 	}
 
 	return ctrl.Result{}, nil
@@ -111,16 +115,17 @@ func getPodName(testID string) string {
 	return fmt.Sprintf("test-%s", testID)
 }
 
-func createAppTests(ctx context.Context, namespace string, app *kgridv1alpha1.Application, logger logr.Logger) error {
+func createAppTests(ctx context.Context, namespace string, app *kgridv1alpha1.Application, version string, logger logr.Logger) error {
 	channelID := ""
 	channelSequence := uint(0)
-	version := ""
 	appClusters := []string{}
 
 	if app.Spec.KOTS != nil {
 		channelID = app.Spec.KOTS.ChannelID
 		channelSequence = app.Spec.KOTS.ChannelSequence
-		version = app.Spec.KOTS.Version
+		if version == "" {
+			version = app.Spec.KOTS.Version
+		}
 		appClusters = app.Spec.KOTS.Clusters
 	} else {
 		return errors.New("no supported applications found")
@@ -160,7 +165,7 @@ func createAppTests(ctx context.Context, namespace string, app *kgridv1alpha1.Ap
 					return errors.Wrap(err, "failed to check if test exists")
 				}
 
-				configSpec, err := getKotsTestConfigMap(ctx, testID, &gridCluster, app)
+				configSpec, err := getKotsTestConfigMap(ctx, testID, &gridCluster, app, version)
 				if err != nil {
 					return errors.Wrap(err, "failed to build test configmap")
 				}
@@ -237,7 +242,7 @@ func getTestPodSpec(testID string, gridCluster *kgridv1alpha1.Cluster, app *kgri
 	return podSpec
 }
 
-func getKotsTestConfigMap(ctx context.Context, testID string, gridCluster *kgridv1alpha1.Cluster, app *kgridv1alpha1.Application) (*corev1.ConfigMap, error) {
+func getKotsTestConfigMap(ctx context.Context, testID string, gridCluster *kgridv1alpha1.Cluster, app *kgridv1alpha1.Application, version string) (*corev1.ConfigMap, error) {
 	configMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      getPodName(testID),
@@ -258,7 +263,12 @@ func getKotsTestConfigMap(ctx context.Context, testID string, gridCluster *kgrid
 	}
 	configMap.Data["grid.yaml"] = string(gridYaml)
 
-	appYaml, err := yaml.Marshal(getAppSpecForTest(app))
+	appSpec, err := getAppSpecForTest(app, version)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to build app spec")
+	}
+
+	appYaml, err := yaml.Marshal(appSpec)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to marshal app spec")
 	}
@@ -319,10 +329,11 @@ func getGridSpecForTest(ctx context.Context, namespace string, gridCluster *kgri
 	return g, nil
 }
 
-func getAppSpecForTest(app *kgridv1alpha1.Application) *gridtypes.Application {
+func getAppSpecForTest(app *kgridv1alpha1.Application, version string) (*gridtypes.Application, error) {
 	if app.Spec.KOTS == nil {
-		return nil // TODO: ++++ error
+		return nil, errors.New("KOTS app is required")
 	}
+
 	a := &gridtypes.Application{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: app.Name,
@@ -338,7 +349,12 @@ func getAppSpecForTest(app *kgridv1alpha1.Application) *gridtypes.Application {
 			},
 		},
 	}
-	return a
+
+	if version != "" {
+		a.Spec.KOTSApplicationSpec.Version = version
+	}
+
+	return a, nil
 }
 
 func kgridImageName() string {
@@ -374,4 +390,46 @@ func defaultKgridNodeAffinity() *corev1.NodeAffinity {
 			},
 		},
 	}
+}
+
+func findVersionForApp(ctx context.Context, namespace string, app *kgridv1alpha1.Application) (string, error) {
+	if app.Spec.KOTS == nil {
+		return "", errors.Errorf("app %s has no supported app type", app.Name)
+	}
+
+	if app.Spec.KOTS.Version != "latest" && app.Spec.KOTS.Version != "" {
+		return app.Spec.KOTS.Version, nil
+	}
+
+	versions, err := listVersions(ctx, namespace)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to list versions")
+	}
+
+	for _, version := range versions.Items {
+		if version.Spec.KOTS != nil {
+			return version.Spec.KOTS.Latest, nil
+		}
+	}
+
+	return "", errors.Errorf("no version found for app %s", app.Name)
+}
+
+func listApplications(ctx context.Context, namespace string) (*kgridv1alpha1.ApplicationList, error) {
+	cfg, err := config.GetRESTConfig()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get config")
+	}
+
+	clientset, err := kgridclientset.NewForConfig(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create app client")
+	}
+
+	apps, err := clientset.Applications(namespace).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to list apps")
+	}
+
+	return apps, nil
 }

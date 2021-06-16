@@ -79,8 +79,7 @@ func (r *VersionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			continue
 		}
 
-		app.Spec.KOTS.Version = instance.Spec.KOTS.Latest
-		err = createAppTests(ctx, app.Namespace, &app, logger)
+		err = createAppTests(ctx, app.Namespace, &app, instance.Spec.KOTS.Latest, logger)
 		if err != nil {
 			return ctrl.Result{}, errors.Wrap(err, "failed to create application test")
 		}
@@ -96,7 +95,7 @@ func (r *VersionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func listApplications(ctx context.Context, namespace string) (*kgridv1alpha1.ApplicationList, error) {
+func listVersions(ctx context.Context, namespace string) (*kgridv1alpha1.VersionList, error) {
 	cfg, err := config.GetRESTConfig()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get config")
@@ -107,10 +106,10 @@ func listApplications(ctx context.Context, namespace string) (*kgridv1alpha1.App
 		return nil, errors.Wrap(err, "failed to create app client")
 	}
 
-	apps, err := clientset.Applications(namespace).List(ctx, metav1.ListOptions{})
+	versions, err := clientset.Versions(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list apps")
 	}
 
-	return apps, nil
+	return versions, nil
 }

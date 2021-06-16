@@ -54,3 +54,16 @@ type SlackLoggerSpec struct {
 func (c EKSNewClusterSpec) GetDeterministicClusterName() string {
 	return fmt.Sprintf("grid-%x", md5.Sum([]byte(fmt.Sprintf("%s-%s-%s", c.Description, c.Region, c.Version))))
 }
+
+func (c ClusterSpec) GetNameForLogging() string {
+	if c.EKS != nil {
+		if c.EKS.ExistingCluster != nil {
+			return c.EKS.ExistingCluster.ClusterName
+		}
+		if c.EKS.NewCluster != nil {
+			return c.EKS.NewCluster.Description
+		}
+	}
+
+	return ""
+}

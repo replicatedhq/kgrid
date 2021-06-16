@@ -29,7 +29,7 @@ func Deploy(g *types.GridConfig, a *types.Application) error {
 			i, completedErr, ok := reflect.Select(cases)
 			if ok {
 				if completedErr.String() != "" {
-					fmt.Printf("cluster %#v failed with error: %s\n", g.ClusterConfigs[i], completedErr.String())
+					fmt.Printf("cluster %s failed with error: %s\n", g.ClusterConfigs[i].Name, completedErr.String())
 				}
 
 				completed[i] = true

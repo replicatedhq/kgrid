@@ -45,7 +45,7 @@ func Create(configFilePath string, g *types.Grid) error {
 			i, completedErr, ok := reflect.Select(cases)
 			if ok {
 				if completedErr.String() != "" {
-					fmt.Printf("cluster %#v failed with error: %s\n", g.Spec.Clusters[i], completedErr.String())
+					fmt.Printf("cluster %s failed with error: %s\n", g.Spec.Clusters[i].GetNameForLogging(), completedErr.String())
 				}
 
 				completed[i] = true

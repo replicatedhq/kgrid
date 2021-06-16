@@ -38,11 +38,6 @@ func (v ValueOrValueFrom) String(ctx context.Context, namespace string) (string,
 		return val, errors.Wrap(err, "failed ot get value from secret")
 	}
 
-	// TODO: ++++ valut
-	// if v.ValueFrom.Vault {
-	// 	return v.ValueFrom.Vault.Secret
-	// }
-
 	return "", nil
 }
 
