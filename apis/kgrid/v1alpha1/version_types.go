@@ -23,13 +23,16 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+type Latest struct {
+	Latest string `json:"latest"`
+}
+
 // VersionSpec defines the desired state of Version
 type VersionSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of Version. Edit version_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	KOTS *Latest `json:"kots,omitempty"`
 }
 
 // VersionStatus defines the observed state of Version

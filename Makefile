@@ -236,8 +236,11 @@ kgrid: fmt vet
 kgrid-test:
 	go test ./pkg/...
 
-docker-build-kgrid: kgrid ## Build docker image with the manager.
+docker-build-kgrid: kgrid ## Build docker image with the kgrid binary.
 	docker build -f Dockerfile.kgrid -t ${IMG_KGRID} .
+
+docker-push-kgrid: ## Push dev image with the kgrid binary.
+	docker push ${IMG_KGRID}
 
 bundle-asset: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
