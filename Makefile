@@ -116,10 +116,10 @@ test: manifests generate fmt vet ## Run tests.
 ##@ Build
 
 build: generate fmt vet ## Build manager binary.
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build ${LDFLAGS} -o bin/manager cmd/manager/main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build ${LDFLAGS} -o bin/manager main.go
 
 run: manifests generate fmt vet ## Run a controller from your host.
-	go run ./cmd/manager/main.go
+	go run main.go
 
 docker-build: test ## Build dev image with the manager.
 	docker build -f Dockerfile.manager.dev -t ${IMG} .
@@ -236,8 +236,11 @@ kgrid: fmt vet
 kgrid-test:
 	go test ./pkg/...
 
-docker-build-kgrid: kgrid ## Build docker image with the manager.
+docker-build-kgrid: kgrid ## Build docker image with the kgrid binary.
 	docker build -f Dockerfile.kgrid -t ${IMG_KGRID} .
+
+docker-push-kgrid: ## Push dev image with the kgrid binary.
+	docker push ${IMG_KGRID}
 
 bundle-asset: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}

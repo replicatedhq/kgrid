@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"crypto/md5"
+	"encoding/json"
 	"fmt"
 
 	"github.com/go-logr/logr"
@@ -79,72 +80,10 @@ func (r *ApplicationReconciler) createJob(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
-	appTestNamePart := ""
-	appClusters := []string{}
-
-	if instance.Spec.KOTS != nil {
-		appTestNamePart = fmt.Sprintf("%s-%d", instance.Spec.KOTS.ChannelID, instance.Spec.KOTS.ChannelSequence)
-		appClusters = instance.Spec.KOTS.Clusters
-	} else {
-		return ctrl.Result{}, errors.New("no supported applications found")
-	}
-
-	grids, err := listGrids(ctx, instance.Namespace)
+	err = createAppTests(ctx, instance.Namespace, instance, logger)
 	if err != nil {
-		return ctrl.Result{}, errors.Wrap(err, "failed to get grids")
-	}
-
-	cfg, err := config.GetRESTConfig()
-	if err != nil {
-		return ctrl.Result{}, errors.Wrap(err, "failed to get config")
-	}
-
-	clientset, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		return ctrl.Result{}, errors.Wrap(err, "failed to create grid client")
-	}
-
-	foundCluster := false
-	for _, grid := range grids.Items {
-		for _, gridCluster := range grid.Spec.Clusters {
-			for _, appCluster := range appClusters {
-				if gridCluster.Name != appCluster {
-					continue
-				}
-
-				foundCluster = true
-
-				testName := getDeterministicTestName(gridCluster.Name, appTestNamePart)
-				_, err := clientset.CoreV1().Pods(instance.Namespace).Get(ctx, testName, metav1.GetOptions{})
-				if err == nil {
-					continue
-				}
-				if !kuberneteserrors.IsNotFound(err) {
-					return ctrl.Result{}, errors.Wrap(err, "failed to check if test exists")
-				}
-
-				configSpec, err := getKotsTestConfigMap(ctx, testName, &gridCluster, instance)
-				if err != nil {
-					return ctrl.Result{}, errors.Wrap(err, "failed to build test configmap")
-				}
-
-				_, err = clientset.CoreV1().ConfigMaps(instance.Namespace).Create(ctx, configSpec, metav1.CreateOptions{})
-				if err != nil && !kuberneteserrors.IsAlreadyExists(err) {
-					return ctrl.Result{}, errors.Wrap(err, "failed to create test config")
-				}
-
-				podSpec := getTestPodSpec(testName, &gridCluster, instance)
-				_, err = clientset.CoreV1().Pods(instance.Namespace).Create(ctx, podSpec, metav1.CreateOptions{})
-				if err != nil {
-					return ctrl.Result{}, errors.Wrap(err, "failed to create test")
-				}
-			}
-		}
-	}
-
-	if !foundCluster {
-		logger.Info("no cluster found for app %s", instance.Name)
-		return ctrl.Result{}, nil
+		logger.Error(err, "failed to get application instance")
+		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
@@ -157,14 +96,102 @@ func (r *ApplicationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func getDeterministicTestName(appClusters string, appNamePart string) string {
-	return fmt.Sprintf("test-%x", md5.Sum([]byte(fmt.Sprintf("%s-%s", appClusters, appNamePart))))
+func getTestID(cluster string, version string, channelID string, channelSequence uint) string {
+	m := map[string]interface{}{
+		"cluster":         cluster,
+		"version":         version,
+		"channelID":       channelID,
+		"channelSequence": channelSequence,
+	}
+	s, _ := json.Marshal(m)
+	return fmt.Sprintf("%x", md5.Sum(s))
 }
 
-func getTestPodSpec(testName string, gridCluster *kgridv1alpha1.Cluster, app *kgridv1alpha1.Application) *corev1.Pod {
+func getPodName(testID string) string {
+	return fmt.Sprintf("test-%s", testID)
+}
+
+func createAppTests(ctx context.Context, namespace string, app *kgridv1alpha1.Application, logger logr.Logger) error {
+	channelID := ""
+	channelSequence := uint(0)
+	version := ""
+	appClusters := []string{}
+
+	if app.Spec.KOTS != nil {
+		channelID = app.Spec.KOTS.ChannelID
+		channelSequence = app.Spec.KOTS.ChannelSequence
+		version = app.Spec.KOTS.Version
+		appClusters = app.Spec.KOTS.Clusters
+	} else {
+		return errors.New("no supported applications found")
+	}
+
+	grids, err := listGrids(ctx, namespace)
+	if err != nil {
+		return errors.Wrap(err, "failed to get grids")
+	}
+
+	cfg, err := config.GetRESTConfig()
+	if err != nil {
+		return errors.Wrap(err, "failed to get config")
+	}
+
+	clientset, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		return errors.Wrap(err, "failed to create k8s client")
+	}
+
+	foundCluster := false
+	for _, grid := range grids.Items {
+		for _, gridCluster := range grid.Spec.Clusters {
+			for _, appCluster := range appClusters {
+				if gridCluster.Name != appCluster {
+					continue
+				}
+
+				foundCluster = true
+
+				testID := getTestID(gridCluster.Name, version, channelID, channelSequence)
+				_, err := clientset.CoreV1().Pods(app.Namespace).Get(ctx, getPodName(testID), metav1.GetOptions{})
+				if err == nil {
+					continue
+				}
+				if !kuberneteserrors.IsNotFound(err) {
+					return errors.Wrap(err, "failed to check if test exists")
+				}
+
+				configSpec, err := getKotsTestConfigMap(ctx, testID, &gridCluster, app)
+				if err != nil {
+					return errors.Wrap(err, "failed to build test configmap")
+				}
+
+				_, err = clientset.CoreV1().ConfigMaps(app.Namespace).Create(ctx, configSpec, metav1.CreateOptions{})
+				if err != nil && !kuberneteserrors.IsAlreadyExists(err) {
+					return errors.Wrap(err, "failed to create test config")
+				}
+
+				podSpec := getTestPodSpec(testID, &gridCluster, app)
+				_, err = clientset.CoreV1().Pods(app.Namespace).Create(ctx, podSpec, metav1.CreateOptions{})
+				if err != nil {
+					return errors.Wrap(err, "failed to create test")
+				}
+			}
+		}
+	}
+
+	if !foundCluster {
+		logger.Info("no cluster found for app %s", app.Name)
+		return nil
+	}
+
+	return nil
+}
+
+func getTestPodSpec(testID string, gridCluster *kgridv1alpha1.Cluster, app *kgridv1alpha1.Application) *corev1.Pod {
+	// TODO: pass test ID to grid pod/command
 	podSpec := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: testName,
+			Name: getPodName(testID),
 		},
 		Spec: corev1.PodSpec{
 			Affinity: &corev1.Affinity{
@@ -173,7 +200,7 @@ func getTestPodSpec(testName string, gridCluster *kgridv1alpha1.Cluster, app *kg
 			RestartPolicy: corev1.RestartPolicyNever,
 			Containers: []corev1.Container{
 				{
-					Image:           fmt.Sprintf("replicated/kgrid:%s", buildversion.ImageTag()),
+					Image:           fmt.Sprintf("%s:%s", kgridImageName(), buildversion.ImageTag()),
 					ImagePullPolicy: corev1.PullAlways,
 					Name:            "grid",
 					Command:         []string{"kgrid"},
@@ -198,7 +225,7 @@ func getTestPodSpec(testName string, gridCluster *kgridv1alpha1.Cluster, app *kg
 					VolumeSource: corev1.VolumeSource{
 						ConfigMap: &corev1.ConfigMapVolumeSource{
 							LocalObjectReference: corev1.LocalObjectReference{
-								Name: testName,
+								Name: getPodName(testID),
 							},
 						},
 					},
@@ -210,10 +237,10 @@ func getTestPodSpec(testName string, gridCluster *kgridv1alpha1.Cluster, app *kg
 	return podSpec
 }
 
-func getKotsTestConfigMap(ctx context.Context, testName string, gridCluster *kgridv1alpha1.Cluster, app *kgridv1alpha1.Application) (*corev1.ConfigMap, error) {
+func getKotsTestConfigMap(ctx context.Context, testID string, gridCluster *kgridv1alpha1.Cluster, app *kgridv1alpha1.Application) (*corev1.ConfigMap, error) {
 	configMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      testName,
+			Name:      getPodName(testID),
 			Namespace: app.Namespace,
 			Labels:    map[string]string{},
 		},
@@ -312,6 +339,14 @@ func getAppSpecForTest(app *kgridv1alpha1.Application) *gridtypes.Application {
 		},
 	}
 	return a
+}
+
+func kgridImageName() string {
+	// TODO: Use kustomize and set image name in env variable
+	if buildversion.ImageTag() == "v0.0.0" {
+		return "localhost:32000/kgrid/kgird"
+	}
+	return "replicated/kgrid"
 }
 
 func defaultKgridNodeAffinity() *corev1.NodeAffinity {

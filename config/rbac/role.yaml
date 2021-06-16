@@ -95,3 +95,29 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - kgrid.replicated.com
+  resources:
+  - versions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kgrid.replicated.com
+  resources:
+  - versions/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - kgrid.replicated.com
+  resources:
+  - versions/status
+  verbs:
+  - get
+  - patch
+  - update

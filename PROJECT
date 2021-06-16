@@ -26,4 +26,13 @@ resources:
   kind: Grid
   path: github.com/replicatedhq/kgrid/apis/kgrid/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: replicated.com
+  group: kgrid
+  kind: Version
+  path: github.com/replicatedhq/kgrid/apis/kgrid/v1alpha1
+  version: v1alpha1
 version: "3"
