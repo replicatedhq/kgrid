@@ -76,7 +76,7 @@ func isApplicationReady(c *types.ClusterConfig, kotsAppSpec *types.KOTSApplicati
 
 	pathToKOTSBinary, err := downloadKOTSBinary(kotsAppSpec.Version)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to get kots binary")
+		return false, errors.Wrapf(err, "failed to get kots %s binary", kotsAppSpec.Version)
 	}
 
 	kubeconfigFile, err := ioutil.TempFile("", "kots")
@@ -129,7 +129,7 @@ func isApplicationReady(c *types.ClusterConfig, kotsAppSpec *types.KOTSApplicati
 		return false, nil
 	case err := <-done:
 		if err != nil {
-			return false, errors.Wrap(err, "failed to run kots")
+			return false, errors.Wrapf(err, "failed to run kots for status check\nSTDOUT:%s\nSTDERR:%s", stdout.String(), stderr.String())
 		}
 
 		appStatusResponse := AppStatusResponse{}
@@ -145,7 +145,7 @@ func deployKOTSApplication(c *types.ClusterConfig, kotsAppSpec *types.KOTSApplic
 	// ensure we have the right version of KOTS
 	pathToKOTSBinary, err := downloadKOTSBinary(kotsAppSpec.Version)
 	if err != nil {
-		return errors.Wrap(err, "failed to get kots binary")
+		return errors.Wrapf(err, "failed to get kots %s binary", kotsAppSpec.Version)
 	}
 
 	pathToLicense, err := downloadKOTSLicense(kotsAppSpec.App, kotsAppSpec.LicenseID)
@@ -235,7 +235,7 @@ func deployKOTSApplication(c *types.ClusterConfig, kotsAppSpec *types.KOTSApplic
 		fmt.Printf("timeoud out deploying app.  received std out: %s\n", stdout.String())
 	case err := <-done:
 		if err != nil {
-			return errors.Wrap(err, "failed to run kots")
+			return errors.Wrapf(err, "failed to run kots for deploy\nSTDOUT:%s\nSTDERR:%s", stdout.String(), stderr.String())
 		}
 
 		fmt.Printf("%s\n", stdout.String())
@@ -284,10 +284,10 @@ func downloadKOTSBinary(version string) (string, error) {
 	url := fmt.Sprintf("https://github.com/replicatedhq/kots/releases/download/v%s/kots_linux_amd64.tar.gz", version)
 	resp, err := http.Get(url)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to http get kots")
+		return "", errors.Wrapf(err, "failed to http get kots from %s", url)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return "", errors.Errorf("failed to download, unexpected status code %d", resp.StatusCode)
+		return "", errors.Errorf("failed to download from %s, unexpected status code %d", url, resp.StatusCode)
 	}
 
 	archiveFile, err := ioutil.TempFile("", "kots")

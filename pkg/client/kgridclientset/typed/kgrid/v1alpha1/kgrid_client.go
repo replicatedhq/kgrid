@@ -27,6 +27,7 @@ type KgridV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	ApplicationsGetter
 	GridsGetter
+	VersionsGetter
 }
 
 // KgridV1alpha1Client is used to interact with features provided by the kgrid group.
@@ -40,6 +41,10 @@ func (c *KgridV1alpha1Client) Applications(namespace string) ApplicationInterfac
 
 func (c *KgridV1alpha1Client) Grids(namespace string) GridInterface {
 	return newGrids(c, namespace)
+}
+
+func (c *KgridV1alpha1Client) Versions(namespace string) VersionInterface {
+	return newVersions(c, namespace)
 }
 
 // NewForConfig creates a new KgridV1alpha1Client for the given config.

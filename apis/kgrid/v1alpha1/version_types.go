@@ -43,6 +43,8 @@ type VersionStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+genclient
+//+k8s:openapi-gen=true
 
 // Version is the Schema for the versions API
 type Version struct {

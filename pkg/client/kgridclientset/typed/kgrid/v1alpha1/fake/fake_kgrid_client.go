@@ -35,6 +35,10 @@ func (c *FakeKgridV1alpha1) Grids(namespace string) v1alpha1.GridInterface {
 	return &FakeGrids{c, namespace}
 }
 
+func (c *FakeKgridV1alpha1) Versions(namespace string) v1alpha1.VersionInterface {
+	return &FakeVersions{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeKgridV1alpha1) RESTClient() rest.Interface {
