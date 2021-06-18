@@ -19,6 +19,7 @@ type KOTSApplicationSpec struct {
 	Version        string                        `json:"version,omitempty"`
 	App            string                        `json:"app"`
 	LicenseID      string                        `json:"licenseID"`
+	Endpoint       string                        `json:"endpoint"`
 	SkipPreflights *bool                         `json:"skipPreflights,omitempty"`
 	Namespace      string                        `json:"namespace,omitempty"`
 	ConfigValues   *kotsv1beta1.ConfigValuesSpec `json:"configValues,omitempty"`
