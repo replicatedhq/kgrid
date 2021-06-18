@@ -53,7 +53,7 @@ func getAppSlug(c *types.ClusterConfig, kotsAppSpec *types.KOTSApplicationSpec) 
 	// and it's sort of ok, but definitely is going to screw up
 
 	// let's make kots return a list of apps?
-	licenseFilePath, err := downloadKOTSLicense(kotsAppSpec.App, kotsAppSpec.LicenseID)
+	licenseFilePath, err := downloadKOTSLicense(kotsAppSpec.Endpoint, kotsAppSpec.App, kotsAppSpec.LicenseID)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to download license")
 	}
@@ -148,7 +148,7 @@ func deployKOTSApplication(c *types.ClusterConfig, kotsAppSpec *types.KOTSApplic
 		return errors.Wrapf(err, "failed to get kots %s binary", kotsAppSpec.Version)
 	}
 
-	pathToLicense, err := downloadKOTSLicense(kotsAppSpec.App, kotsAppSpec.LicenseID)
+	pathToLicense, err := downloadKOTSLicense(kotsAppSpec.Endpoint, kotsAppSpec.App, kotsAppSpec.LicenseID)
 	if err != nil {
 		return errors.Wrap(err, "failed to get license")
 	}
@@ -245,8 +245,11 @@ func deployKOTSApplication(c *types.ClusterConfig, kotsAppSpec *types.KOTSApplic
 }
 
 // the caller is responsible for deleting the file
-func downloadKOTSLicense(appSlug string, licenseID string) (string, error) {
-	url := fmt.Sprintf("https://replicated.app/license/%s", appSlug)
+func downloadKOTSLicense(endpoint string, appSlug string, licenseID string) (string, error) {
+	if endpoint == "" {
+		endpoint = "https://replicated.app"
+	}
+	url := fmt.Sprintf("%s/license/%s", endpoint, appSlug)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
