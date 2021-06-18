@@ -343,6 +343,7 @@ func getAppSpecForTest(app *kgridv1alpha1.Application, version string) (*gridtyp
 				Version:        app.Spec.KOTS.Version,
 				App:            app.Spec.KOTS.AppSlug,
 				LicenseID:      app.Spec.KOTS.LicenseID,
+				Endpoint:       app.Spec.KOTS.Endpoint,
 				SkipPreflights: &app.Spec.KOTS.SkipPreflights,
 				Namespace:      app.Spec.KOTS.Namespace,
 				ConfigValues:   app.Spec.KOTS.ConfigValues.Spec.DeepCopy(),
