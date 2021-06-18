@@ -52,19 +52,17 @@ type GridReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *GridReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := r.Log.WithValues("grid", req.NamespacedName)
+	_ = r.Log.WithValues("grid", req.NamespacedName)
 
 	instance := &kgridv1alpha1.Grid{}
 	err := r.Get(context.Background(), req.NamespacedName, instance)
 	if err != nil {
-		logger.Error(err, "failed to get grid instance")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, errors.Wrap(err, "failed to get grid instance")
 	}
 
 	result, err := r.reconcileGrid(ctx, instance)
 	if err != nil {
-		logger.Error(err, "failed to reconcile grid")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, errors.Wrap(err, "failed to reconcile grid")
 	}
 
 	return result, nil

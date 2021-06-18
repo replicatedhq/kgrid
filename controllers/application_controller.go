@@ -185,7 +185,7 @@ func createAppTests(ctx context.Context, namespace string, app *kgridv1alpha1.Ap
 	}
 
 	if !foundCluster {
-		logger.Info("no cluster found for app %s", app.Name)
+		logger.Info("no cluster found for app", "appName", app.Name)
 		return nil
 	}
 
