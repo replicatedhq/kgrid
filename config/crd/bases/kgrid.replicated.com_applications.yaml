@@ -92,6 +92,8 @@ spec:
                           of ConfigValues
                         type: object
                     type: object
+                  endpoint:
+                    type: string
                   licenseID:
                     type: string
                   namespace:
@@ -106,6 +108,7 @@ spec:
                 - channelSequence
                 - clusters
                 - configValues
+                - endpoint
                 - licenseID
                 - namespace
                 - skipPreflights

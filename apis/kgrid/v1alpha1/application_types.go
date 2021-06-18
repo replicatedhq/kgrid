@@ -30,6 +30,7 @@ type KOTS struct {
 	AppSlug         string                   `json:"appSlug"`
 	LicenseID       string                   `json:"licenseID"`
 	ChannelID       string                   `json:"channelID"`
+	Endpoint        string                   `json:"endpoint"`
 	ChannelSequence uint                     `json:"channelSequence"`
 	SkipPreflights  bool                     `json:"skipPreflights"`
 	Namespace       string                   `json:"namespace"`
