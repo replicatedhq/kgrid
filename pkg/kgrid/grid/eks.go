@@ -366,15 +366,15 @@ func ensurePrivateEKSSubnets(cfg aws.Config, vpcID string) ([]string, error) {
 		return subnetIDs, nil
 	}
 
-	subnetID, err := createSubnetInVPC(cfg, vpcID, "172.24.100.0/24", "us-west-1a", "replicatedhq/private")
+	subnetID, err := createSubnetInVPC(cfg, vpcID, "172.24.100.0/24", cfg.Region+"a", "replicatedhq/private")
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create subnet")
+		return nil, errors.Wrap(err, "failed to create private subnet a")
 	}
 	subnetIDs = append(subnetIDs, subnetID)
 
-	subnetID, err = createSubnetInVPC(cfg, vpcID, "172.24.101.0/24", "us-west-1b", "replicatedhq/private")
+	subnetID, err = createSubnetInVPC(cfg, vpcID, "172.24.101.0/24", cfg.Region+"b", "replicatedhq/private")
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create subnet")
+		return nil, errors.Wrap(err, "failed to create private subnet b")
 	}
 	subnetIDs = append(subnetIDs, subnetID)
 
@@ -407,9 +407,9 @@ func ensurePublicEKSSubnet(cfg aws.Config, vpcID string) (string, error) {
 		}
 	}
 
-	subnetID, err := createSubnetInVPC(cfg, vpcID, "172.24.102.0/24", "us-west-1a", "replicatedhq/public")
+	subnetID, err := createSubnetInVPC(cfg, vpcID, "172.24.102.0/24", cfg.Region+"a", "replicatedhq/public")
 	if err != nil {
-		return "", errors.Wrap(err, "failed to create subnet")
+		return "", errors.Wrap(err, "failed to create public subnet a")
 	}
 
 	return subnetID, nil
