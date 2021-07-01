@@ -26,6 +26,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/tj/go-spin v1.1.0
 	k8s.io/api v0.21.0
+	k8s.io/apiextensions-apiserver v0.20.5
 	k8s.io/apimachinery v0.21.0
 	k8s.io/cli-runtime v0.20.5
 	k8s.io/client-go v11.0.0+incompatible

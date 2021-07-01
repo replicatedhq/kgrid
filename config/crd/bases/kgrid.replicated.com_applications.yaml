@@ -103,16 +103,8 @@ spec:
                   version:
                     type: string
                 required:
-                - appSlug
-                - channelID
-                - channelSequence
                 - clusters
-                - configValues
-                - endpoint
                 - licenseID
-                - namespace
-                - skipPreflights
-                - version
                 type: object
             type: object
           status:

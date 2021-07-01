@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/replicatedhq/kgrid/pkg/kgrid/cli"
+	"github.com/replicatedhq/kgrid/cmd/kgrid/cli"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/azure" // required for Azure
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"   // required for GKE
 )
