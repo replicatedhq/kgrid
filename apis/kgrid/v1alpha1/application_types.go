@@ -26,15 +26,15 @@ import (
 
 type KOTS struct {
 	Clusters        []string                 `json:"clusters"`
-	Version         string                   `json:"version"`
-	AppSlug         string                   `json:"appSlug"`
+	Version         string                   `json:"version,omitempty"`
+	AppSlug         string                   `json:"appSlug,omitempty"`
 	LicenseID       string                   `json:"licenseID"`
-	ChannelID       string                   `json:"channelID"`
-	Endpoint        string                   `json:"endpoint"`
-	ChannelSequence uint                     `json:"channelSequence"`
-	SkipPreflights  bool                     `json:"skipPreflights"`
-	Namespace       string                   `json:"namespace"`
-	ConfigValues    kotsv1beta1.ConfigValues `json:"configValues"`
+	ChannelID       string                   `json:"channelID,omitempty"`
+	Endpoint        string                   `json:"endpoint,omitempty"`
+	ChannelSequence uint                     `json:"channelSequence,omitempty"`
+	SkipPreflights  bool                     `json:"skipPreflights,omitempty"`
+	Namespace       string                   `json:"namespace,omitempty"`
+	ConfigValues    kotsv1beta1.ConfigValues `json:"configValues,omitempty"`
 }
 
 // ApplicationSpec defines the desired state of Application
