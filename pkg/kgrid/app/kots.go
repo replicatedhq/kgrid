@@ -24,8 +24,7 @@ import (
 )
 
 const (
-	DefaultKOTSVersion = "1.27.0"
-	DefaultK6Version   = "0.29.0"
+	DefaultKOTSVersion = "v1.27.0"
 )
 
 type AppStatusResponse struct {
@@ -284,7 +283,7 @@ func downloadKOTSBinary(version string) (string, error) {
 		version = DefaultKOTSVersion
 	}
 
-	url := fmt.Sprintf("https://github.com/replicatedhq/kots/releases/download/v%s/kots_linux_amd64.tar.gz", version)
+	url := fmt.Sprintf("https://github.com/replicatedhq/kots/releases/download/%s/kots_linux_amd64.tar.gz", version)
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to http get kots from %s", url)
