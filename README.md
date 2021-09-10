@@ -77,3 +77,30 @@ spec:
  kots:
    latest: "1.41.0"
 ```
+
+## Running locally
+
+1. Install CRDs: `make install`
+1. Build images: `make docker-build docker-push docker-build-kgrid docker-push-kgrid`
+1. Deploy controller: `make deploy`
+1. Create `grid` (required) and `version` (optional) specs: `./dev/deploy_dev_specs.sh`
+
+## RBAC
+
+In order for a k8s ServiceAccount that does not have cluster level access to be able to manage kgrid application specs, it must have editor access.  The following RoleBinding needs to be created.
+
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: <name>
+  namespace: kgrid-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kgrid-application-editor-role
+subjects:
+- kind: ServiceAccount
+  name: <name>
+  namespace: <name>
+```
