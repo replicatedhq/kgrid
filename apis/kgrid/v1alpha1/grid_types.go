@@ -24,8 +24,9 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 type Cluster struct {
-	Name string `json:"name"`
-	EKS  *EKS   `json:"eks,omitempty"`
+	Name   string  `json:"name"`
+	EKS    *EKS    `json:"eks,omitempty"`
+	Logger *Logger `json:"logger,omitempty"`
 }
 
 type EKS struct {
@@ -34,6 +35,15 @@ type EKS struct {
 	Create          bool             `json:"create"`
 	AaccessKeyID    ValueOrValueFrom `json:"accessKeyId"`
 	SecretAccessKey ValueOrValueFrom `json:"secretAccessKey"`
+}
+
+type SlackLogger struct {
+	Token   ValueOrValueFrom `json:"token,omitempty"`
+	Channel string           `json:"channel,omitempty"`
+}
+
+type Logger struct {
+	Slack *SlackLogger `json:"slack,omitempty"`
 }
 
 // GridSpec defines the desired state of Grid

@@ -36,19 +36,21 @@ func (l *TerminalLogger) Verbose() {
 	l.isVerbose = true
 }
 
-func (l *TerminalLogger) Initialize() {
+func (l *TerminalLogger) StartThread(msg string, args ...interface{}) {
 	if l == nil || l.isSilent {
 		return
 	}
 
+	fmt.Printf(msg, args...)
 	fmt.Println("")
 }
 
-func (l *TerminalLogger) Finish() {
+func (l *TerminalLogger) FinishThread(msg string, args ...interface{}) {
 	if l == nil || l.isSilent {
 		return
 	}
 
+	fmt.Printf(msg, args...)
 	fmt.Println("")
 }
 

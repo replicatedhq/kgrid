@@ -18,7 +18,7 @@ import (
 // Create will create the grid defined in the gridSpec
 // the name of the grid will be the name in the metadata.name field
 // This function is synchronous and will not return until all clusters are ready
-func Create(configFilePath string, g *types.Grid) error {
+func Create(configFilePath string, g *types.Grid, log logger.Logger) error {
 	completed := map[int]bool{}
 	completedChans := make([]chan string, len(g.Spec.Clusters))
 	for i := range g.Spec.Clusters {
@@ -67,7 +67,6 @@ func Create(configFilePath string, g *types.Grid) error {
 
 	// start each
 	for i, cluster := range g.Spec.Clusters {
-		log := logger.NewLogger(g.Spec.Logger)
 		go createCluster(g.Name, cluster, completedChans[i], configFilePath, log)
 	}
 

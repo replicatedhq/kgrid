@@ -7,6 +7,7 @@ import (
 	"github.com/replicatedhq/kgrid/pkg/kgrid/app"
 	"github.com/replicatedhq/kgrid/pkg/kgrid/grid"
 	"github.com/replicatedhq/kgrid/pkg/kgrid/grid/types"
+	"github.com/replicatedhq/kgrid/pkg/kgrid/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"sigs.k8s.io/yaml"
@@ -23,7 +24,7 @@ func DeployCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			v := viper.GetViper()
 
-			return deployApp(v.GetString("config-file"), v.GetString("grid"), v.GetString("app"))
+			return deployApp(v.GetString("config-file"), v.GetString("grid"), v.GetString("app"), logger.NewTerminalLogger())
 		},
 	}
 
@@ -33,7 +34,7 @@ func DeployCmd() *cobra.Command {
 	return cmd
 }
 
-func deployApp(configFile string, gridName string, appSpecFilename string) error {
+func deployApp(configFile string, gridName string, appSpecFilename string, log logger.Logger) error {
 	data, err := ioutil.ReadFile(appSpecFilename)
 	if err != nil {
 		return errors.Wrap(err, "failed to read app spec file")
@@ -51,7 +52,7 @@ func deployApp(configFile string, gridName string, appSpecFilename string) error
 
 	for _, g := range grids {
 		if g.Name == gridName {
-			if err := app.Deploy(g, &application); err != nil {
+			if err := app.Deploy(g, &application, log); err != nil {
 				return errors.Wrap(err, "failed to deploy app")
 			}
 

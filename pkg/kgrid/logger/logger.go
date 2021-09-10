@@ -7,8 +7,8 @@ import (
 type Logger interface {
 	Silence()
 	Verbose()
-	Initialize()
-	Finish()
+	StartThread(msg string, args ...interface{})
+	FinishThread(msg string, args ...interface{})
 	Debug(msg string, args ...interface{})
 	Info(msg string, args ...interface{})
 	ActionWithoutSpinner(msg string, args ...interface{})
