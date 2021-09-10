@@ -279,9 +279,7 @@ func getKotsTestConfigMap(ctx context.Context, testID string, gridCluster *kgrid
 
 func getGridSpecForTest(ctx context.Context, namespace string, gridCluster *kgridv1alpha1.Cluster) (*gridtypes.Grid, error) {
 	g := &gridtypes.Grid{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: gridCluster.Name,
-		},
+		Name: gridCluster.Name,
 		Spec: gridtypes.GridSpec{},
 	}
 
@@ -320,6 +318,17 @@ func getGridSpecForTest(ctx context.Context, namespace string, gridCluster *kgri
 				},
 				ClusterName: gridCluster.Name,
 				Region:      gridCluster.EKS.Region,
+			}
+		}
+
+		if gridCluster.Logger != nil && gridCluster.Logger.Slack != nil {
+			clusterSpec.Logger = gridtypes.LoggerSpec{
+				Slack: &gridtypes.SlackLoggerSpec{
+					Token: gridtypes.ValueOrValueFrom{
+						Value: gridCluster.Logger.Slack.Token.Value,
+					},
+					Channel: gridCluster.Logger.Slack.Channel,
+				},
 			}
 		}
 	}

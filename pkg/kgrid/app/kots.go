@@ -18,6 +18,7 @@ import (
 	"github.com/gosimple/slug"
 	"github.com/pkg/errors"
 	"github.com/replicatedhq/kgrid/pkg/kgrid/grid/types"
+	"github.com/replicatedhq/kgrid/pkg/kgrid/logger"
 	kotsv1beta1 "github.com/replicatedhq/kots/kotskinds/apis/kots/v1beta1"
 	"github.com/replicatedhq/kots/pkg/kotsutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -68,23 +69,16 @@ func getAppSlug(c *types.ClusterConfig, kotsAppSpec *types.KOTSApplicationSpec) 
 	return slug.Make(titleForSlug), nil
 }
 
-// isApplicationReady will return
-//  bool1: is the application ready
-func isApplicationReady(c *types.ClusterConfig, kotsAppSpec *types.KOTSApplicationSpec) (bool, error) {
-	// right now, we just check the status informers
-
-	pathToKOTSBinary, err := downloadKOTSBinary(kotsAppSpec.Version)
-	if err != nil {
-		return false, errors.Wrapf(err, "failed to get kots %s binary", kotsAppSpec.Version)
-	}
+func getKOTSApplicationStatus(c *types.ClusterConfig, kotsAppSpec *types.KOTSApplicationSpec, pathToKOTSBinary string, log logger.Logger) (*AppStatusResponse, error) {
+	log.Info("Checking %s status", kotsAppSpec.App)
 
 	kubeconfigFile, err := ioutil.TempFile("", "kots")
 	if err != nil {
-		return false, errors.Wrap(err, "failed to create temp file")
+		return nil, errors.Wrap(err, "failed to create temp file")
 	}
 	defer os.RemoveAll(kubeconfigFile.Name())
 	if err := ioutil.WriteFile(kubeconfigFile.Name(), []byte(c.Kubeconfig), 0644); err != nil {
-		return false, errors.Wrap(err, "failed to create kubeconfig")
+		return nil, errors.Wrap(err, "failed to create kubeconfig")
 	}
 
 	namespace := kotsAppSpec.Namespace
@@ -94,7 +88,7 @@ func isApplicationReady(c *types.ClusterConfig, kotsAppSpec *types.KOTSApplicati
 
 	appSlug, err := getAppSlug(c, kotsAppSpec)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to get app slug")
+		return nil, errors.Wrap(err, "failed to get app slug")
 	}
 
 	args := []string{
@@ -124,28 +118,23 @@ func isApplicationReady(c *types.ClusterConfig, kotsAppSpec *types.KOTSApplicati
 	select {
 	case <-timeout:
 		cmd.Process.Kill()
-		fmt.Printf("timedout waiting for app ready.  received std out: %s\n", stdout.String())
-		return false, nil
+		return nil, errors.Errorf("timedout waiting for app ready.  received std out: %s\n", stdout.String())
 	case err := <-done:
 		if err != nil {
-			return false, errors.Wrapf(err, "failed to run kots for status check\nSTDOUT:%s\nSTDERR:%s", stdout.String(), stderr.String())
+			return nil, errors.Wrapf(err, "failed to run kots for status check\nSTDOUT:%s\nSTDERR:%s", stdout.String(), stderr.String())
 		}
 
 		appStatusResponse := AppStatusResponse{}
 		if err := json.Unmarshal(stdout.Bytes(), &appStatusResponse); err != nil {
-			return false, errors.Wrap(err, "faile to parse app status response")
+			return nil, errors.Wrap(err, "faile to parse app status response")
 		}
 
-		return appStatusResponse.AppStatus.State == "ready", nil
+		return &appStatusResponse, nil
 	}
 }
 
-func deployKOTSApplication(c *types.ClusterConfig, kotsAppSpec *types.KOTSApplicationSpec) error {
-	// ensure we have the right version of KOTS
-	pathToKOTSBinary, err := downloadKOTSBinary(kotsAppSpec.Version)
-	if err != nil {
-		return errors.Wrapf(err, "failed to get kots %s binary", kotsAppSpec.Version)
-	}
+func deployKOTSApplication(c *types.ClusterConfig, kotsAppSpec *types.KOTSApplicationSpec, pathToKOTSBinary string, log logger.Logger) error {
+	log.Info("Deploying app %s", kotsAppSpec.App)
 
 	pathToLicense, err := downloadKOTSLicense(kotsAppSpec.Endpoint, kotsAppSpec.App, kotsAppSpec.LicenseID)
 	if err != nil {
@@ -231,13 +220,13 @@ func deployKOTSApplication(c *types.ClusterConfig, kotsAppSpec *types.KOTSApplic
 	select {
 	case <-timeout:
 		cmd.Process.Kill()
-		fmt.Printf("timeoud out deploying app.  received std out: %s\n", stdout.String())
+		log.Info("timeoud out deploying app.  received std out: %s", stdout.String())
 	case err := <-done:
 		if err != nil {
 			return errors.Wrapf(err, "failed to run kots for deploy\nSTDOUT:%s\nSTDERR:%s", stdout.String(), stderr.String())
 		}
 
-		fmt.Printf("%s\n", stdout.String())
+		log.Info("```%s```", stdout.String())
 	}
 
 	return nil

@@ -3,23 +3,20 @@ package types
 import (
 	"crypto/md5"
 	"fmt"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Grid struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              GridSpec `json:"spec"`
+	Name string   `json:"name"`
+	Spec GridSpec `json:"spec"`
 }
 
 type GridSpec struct {
 	Clusters []*ClusterSpec `json:"clusters"`
-	Logger   LoggerSpec     `json:"logger"`
 }
 
 type ClusterSpec struct {
-	EKS *EKSSpec `json:"eks,omitempty"`
+	Logger LoggerSpec `json:"logger"`
+	EKS    *EKSSpec   `json:"eks,omitempty"`
 }
 
 type EKSSpec struct {
@@ -48,7 +45,7 @@ type LoggerSpec struct {
 
 type SlackLoggerSpec struct {
 	Token   ValueOrValueFrom `json:"token,omitempty"`
-	Channel ValueOrValueFrom `json:"channel,omitempty"`
+	Channel string           `json:"channel,omitempty"`
 }
 
 func (c EKSNewClusterSpec) GetDeterministicClusterName() string {

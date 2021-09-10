@@ -34,7 +34,7 @@ func Delete(configFilePath string, g *types.Grid) error {
 				go func(config *types.ClusterConfig, cluster *types.ClusterSpec) {
 					defer wg.Done()
 
-					log := logger.NewLogger(g.Spec.Logger)
+					log := logger.NewLogger(cluster.Logger)
 
 					err := deleteCluster(config, cluster, log)
 					if err != nil {
