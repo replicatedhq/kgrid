@@ -322,10 +322,15 @@ func getGridSpecForTest(ctx context.Context, namespace string, gridCluster *kgri
 		}
 
 		if gridCluster.Logger != nil && gridCluster.Logger.Slack != nil {
+			slackToken, err := gridCluster.Logger.Slack.Token.String(ctx, namespace)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to get secret access key")
+			}
+
 			clusterSpec.Logger = gridtypes.LoggerSpec{
 				Slack: &gridtypes.SlackLoggerSpec{
 					Token: gridtypes.ValueOrValueFrom{
-						Value: gridCluster.Logger.Slack.Token.Value,
+						Value: slackToken,
 					},
 					Channel: gridCluster.Logger.Slack.Channel,
 				},
