@@ -124,7 +124,7 @@ rules:
 - apiGroups:
   - kgrid.replicated.com
   resources:
-  - resultses
+  - results
   verbs:
   - create
   - delete
@@ -136,13 +136,13 @@ rules:
 - apiGroups:
   - kgrid.replicated.com
   resources:
-  - resultses/finalizers
+  - results/finalizers
   verbs:
   - update
 - apiGroups:
   - kgrid.replicated.com
   resources:
-  - resultses/status
+  - results/status
   verbs:
   - get
   - patch

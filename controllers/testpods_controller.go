@@ -75,11 +75,11 @@ func (r *TestPodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
-	resultses, err := listResults(ctx, pod.Namespace)
+	results, err := listResults(ctx, pod.Namespace)
 	if err != nil {
 		return ctrl.Result{}, errors.Wrap(err, "failed to get test pod")
 	}
-	for _, results := range resultses.Items {
+	for _, results := range results.Items {
 		updated := false
 
 		for i, test := range results.Tests {

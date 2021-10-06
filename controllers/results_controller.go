@@ -43,9 +43,9 @@ type ResultsReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=resultses,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=resultses/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=resultses/finalizers,verbs=update
+//+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=results,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=results/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=results/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -58,7 +58,7 @@ type ResultsReconciler struct {
 func (r *ResultsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	// This only runs on create events to get the statuses of any pods that might have completed
 	// before this was created. The test pods controller will update this Result with future changes.
-	instance := &kgridv1alpha1.Results{}
+	instance := &kgridv1alpha1.Result{}
 	err := r.Get(context.Background(), req.NamespacedName, instance)
 	if err != nil {
 		if kuberneteserrors.IsNotFound(err) {
@@ -121,12 +121,12 @@ func (r *ResultsReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&kgridv1alpha1.Results{}).
+		For(&kgridv1alpha1.Result{}).
 		WithEventFilter(isCreate).
 		Complete(r)
 }
 
-func listResults(ctx context.Context, namespace string) (*kgridv1alpha1.ResultsList, error) {
+func listResults(ctx context.Context, namespace string) (*kgridv1alpha1.ResultList, error) {
 	cfg, err := config.GetRESTConfig()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get config")
@@ -137,7 +137,7 @@ func listResults(ctx context.Context, namespace string) (*kgridv1alpha1.ResultsL
 		return nil, errors.Wrap(err, "failed to create app client")
 	}
 
-	results, err := clientset.Resultses(namespace).List(ctx, metav1.ListOptions{})
+	results, err := clientset.Results(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list apps")
 	}
@@ -145,7 +145,7 @@ func listResults(ctx context.Context, namespace string) (*kgridv1alpha1.ResultsL
 	return results, nil
 }
 
-func createOrUpdateResults(ctx context.Context, results *kgridv1alpha1.Results) error {
+func createOrUpdateResults(ctx context.Context, results *kgridv1alpha1.Result) error {
 	cfg, err := config.GetRESTConfig()
 	if err != nil {
 		return errors.Wrap(err, "failed to get config")
@@ -156,7 +156,7 @@ func createOrUpdateResults(ctx context.Context, results *kgridv1alpha1.Results) 
 		return errors.Wrap(err, "failed to create app client")
 	}
 
-	_, err = clientset.Resultses(results.Namespace).Create(ctx, results, metav1.CreateOptions{})
+	_, err = clientset.Results(results.Namespace).Create(ctx, results, metav1.CreateOptions{})
 	if err != nil {
 		if kuberneteserrors.IsAlreadyExists(err) {
 			_, err := updateResults(ctx, results)
@@ -172,7 +172,7 @@ func createOrUpdateResults(ctx context.Context, results *kgridv1alpha1.Results) 
 	return nil
 }
 
-func updateResults(ctx context.Context, results *kgridv1alpha1.Results) (*kgridv1alpha1.Results, error) {
+func updateResults(ctx context.Context, results *kgridv1alpha1.Result) (*kgridv1alpha1.Result, error) {
 	cfg, err := config.GetRESTConfig()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get config")
@@ -183,7 +183,7 @@ func updateResults(ctx context.Context, results *kgridv1alpha1.Results) (*kgridv
 		return nil, errors.Wrap(err, "failed to create app client")
 	}
 
-	results, err = clientset.Resultses(results.Namespace).Update(ctx, results, metav1.UpdateOptions{})
+	results, err = clientset.Results(results.Namespace).Update(ctx, results, metav1.UpdateOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to update results")
 	}
