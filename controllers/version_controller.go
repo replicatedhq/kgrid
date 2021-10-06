@@ -91,8 +91,11 @@ func (r *VersionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	resultName := instance.Labels["runId"]
 	if resultName != "" {
 		results := &kgridv1alpha1.Results{
-			ObjectMeta: metav1.ObjectMeta{},
-			Tests:      tests,
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      resultName,
+				Namespace: instance.Namespace,
+			},
+			Tests: tests,
 		}
 		err := createOrUpdateResults(ctx, results)
 		if err != nil {
