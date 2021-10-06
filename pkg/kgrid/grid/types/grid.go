@@ -1,10 +1,5 @@
 package types
 
-import (
-	"crypto/md5"
-	"fmt"
-)
-
 type Grid struct {
 	Name string   `json:"name"`
 	Spec GridSpec `json:"spec"`
@@ -32,6 +27,7 @@ type EKSExistingClusterSpec struct {
 }
 
 type EKSNewClusterSpec struct {
+	Name            string           `json:"-"`
 	Description     string           `json:"description,omitempty"`
 	Version         string           `json:"version,omitempty"`
 	AccessKeyID     ValueOrValueFrom `json:"accessKeyId"`
@@ -46,10 +42,6 @@ type LoggerSpec struct {
 type SlackLoggerSpec struct {
 	Token   ValueOrValueFrom `json:"token,omitempty"`
 	Channel string           `json:"channel,omitempty"`
-}
-
-func (c EKSNewClusterSpec) GetDeterministicClusterName() string {
-	return fmt.Sprintf("grid-%x", md5.Sum([]byte(fmt.Sprintf("%s-%s-%s", c.Description, c.Region, c.Version))))
 }
 
 func (c ClusterSpec) GetNameForLogging() string {

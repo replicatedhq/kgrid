@@ -15,7 +15,7 @@ import (
 func Delete(configFilePath string, g *types.Grid, log logger.Logger) error {
 	gridConfigs, err := List(configFilePath)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to list grid configs")
 	}
 
 	wg := sync.WaitGroup{}
@@ -26,7 +26,10 @@ func Delete(configFilePath string, g *types.Grid, log logger.Logger) error {
 					continue
 				}
 
-				if clusterConfig.Name != cluster.EKS.NewCluster.GetDeterministicClusterName() {
+				if cluster.EKS.NewCluster.Name == "" {
+					return errors.New("cluster has no name")
+				}
+				if clusterConfig.Name != cluster.EKS.NewCluster.Name {
 					continue
 				}
 
@@ -61,9 +64,11 @@ func deleteCluster(c *types.ClusterConfig, cluster *types.ClusterSpec, log logge
 }
 
 func deleteNewEKSCluster(c *types.ClusterConfig, cluster *types.EKSSpec, log logger.Logger) error {
-	clusterName := c.GetDeterministicClusterName()
+	if cluster.NewCluster == nil {
+		return errors.New("cluster spec is nil")
+	}
 
-	log.Info("Deleting EKS cluster %s", clusterName)
+	log.Info("Deleting EKS cluster %s", cluster.NewCluster.Name)
 
 	cfg, err := config.LoadDefaultConfig(context.Background(), config.WithRegion(c.Region))
 	if err != nil {
@@ -82,18 +87,18 @@ func deleteNewEKSCluster(c *types.ClusterConfig, cluster *types.EKSSpec, log log
 	cfg.Credentials = credentials.NewStaticCredentialsProvider(accessKeyID, secretAccessKey, "")
 
 	log.Info("Deleting node group for EKS cluster (this may take a few minutes)")
-	err = deleteEKSNodeGroup(cfg, clusterName, clusterName)
+	err = deleteEKSNodeGroup(cfg, cluster.NewCluster.Name, cluster.NewCluster.Name)
 	if err != nil {
 		return errors.Wrap(err, "failed to delete node group")
 	}
 
-	err = waitEKSNodeGroupGone(cfg, clusterName, clusterName)
+	err = waitEKSNodeGroupGone(cfg, cluster.NewCluster.Name, cluster.NewCluster.Name)
 	if err != nil {
 		return errors.Wrap(err, "failed to wait for node group delete")
 	}
 
 	log.Info("Deleting EKS cluster")
-	err = deleteEKSCluster(cfg, clusterName)
+	err = deleteEKSCluster(cfg, cluster.NewCluster.Name)
 	if err != nil {
 		return errors.Wrap(err, "failed to delete cluster")
 	}

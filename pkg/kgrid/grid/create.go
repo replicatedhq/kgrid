@@ -2,6 +2,7 @@ package grid
 
 import (
 	"context"
+	"crypto/md5"
 	"fmt"
 	"reflect"
 	"strings"
@@ -180,9 +181,9 @@ func connectExistingEKSCluster(gridName string, existingEKSCluster *types.EKSExi
 // createNewEKSCluster will create a complete, ready to use EKS cluster with all
 // security groups, vpcs, node pools, and everything else
 func createNewEKSCluter(gridName string, newEKSCluster *types.EKSNewClusterSpec, completedCh chan string, configFilePath string, log logger.Logger) {
-	clusterName := newEKSCluster.GetDeterministicClusterName()
+	newEKSCluster.Name = generateClusterName()
 
-	log.Info("Creating EKS cluster with all required dependencies with name %s", clusterName)
+	log.Info("Creating EKS cluster with all required dependencies with name %s", newEKSCluster.Name)
 
 	cfg, err := config.LoadDefaultConfig(context.Background(), config.WithRegion(newEKSCluster.Region))
 	if err != nil {
@@ -211,7 +212,7 @@ func createNewEKSCluter(gridName string, newEKSCluster *types.EKSNewClusterSpec,
 	}
 
 	log.Info("Creating EKS Cluster Control Plane")
-	cluster, err := ensureEKSCluterControlPlane(cfg, newEKSCluster, clusterName, vpc)
+	cluster, err := ensureEKSCluterControlPlane(cfg, newEKSCluster, newEKSCluster.Name, vpc)
 	if err != nil {
 		if !strings.Contains(err.Error(), "Cluster already exists with name") {
 			completedCh <- fmt.Sprintf("failed to create eks cluster control plane: %s", err.Error())
@@ -220,13 +221,13 @@ func createNewEKSCluter(gridName string, newEKSCluster *types.EKSNewClusterSpec,
 	}
 
 	log.Info("Waiting for EKS Cluster Control Plane to be ready (this can take a while, 15 minutes is not unusual)")
-	if err := waitForClusterToBeActive(newEKSCluster, accessKeyID, secretAccessKey, clusterName); err != nil {
+	if err := waitForClusterToBeActive(newEKSCluster, accessKeyID, secretAccessKey, newEKSCluster.Name); err != nil {
 		completedCh <- fmt.Sprintf("cluster did not become ready")
 		return
 	}
 
 	log.Info("Creating EKS Cluster Node Group")
-	nodeGroup, err := ensureEKSClusterNodeGroup(cfg, cluster, clusterName, vpc)
+	nodeGroup, err := ensureEKSClusterNodeGroup(cfg, cluster, newEKSCluster.Name, vpc)
 	if err != nil {
 		if !strings.Contains(err.Error(), "NodeGroup already exists") {
 			completedCh <- fmt.Sprintf("failed to create eks cluster node pool: %s", err.Error())
@@ -234,13 +235,13 @@ func createNewEKSCluter(gridName string, newEKSCluster *types.EKSNewClusterSpec,
 		}
 	}
 
-	kubeConfig, err := GetEKSClusterKubeConfig(newEKSCluster.Region, accessKeyID, secretAccessKey, clusterName)
+	kubeConfig, err := GetEKSClusterKubeConfig(newEKSCluster.Region, accessKeyID, secretAccessKey, newEKSCluster.Name)
 	if err != nil {
 		completedCh <- fmt.Sprintf("failed to get kubeconfig from eks cluster: %s", err.Error())
 	}
 
 	clusterConfig := types.ClusterConfig{
-		Name:        clusterName,
+		Name:        newEKSCluster.Name,
 		Description: newEKSCluster.Description,
 		Provider:    "aws",
 		IsExisting:  false,
@@ -341,4 +342,8 @@ func waitForNodes(c *types.ClusterConfig, nodeGroup *ekstypes.Nodegroup) error {
 	}
 
 	return errors.New("timed out")
+}
+
+func generateClusterName() string {
+	return fmt.Sprintf("grid-%x", md5.Sum([]byte(fmt.Sprintf("%d", time.Now().UnixNano()))))
 }
