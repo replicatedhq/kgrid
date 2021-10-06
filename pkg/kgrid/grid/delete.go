@@ -12,7 +12,7 @@ import (
 	"github.com/replicatedhq/kgrid/pkg/kgrid/logger"
 )
 
-func Delete(configFilePath string, g *types.Grid) error {
+func Delete(configFilePath string, g *types.Grid, log logger.Logger) error {
 	gridConfigs, err := List(configFilePath)
 	if err != nil {
 		return err
@@ -33,8 +33,6 @@ func Delete(configFilePath string, g *types.Grid) error {
 				wg.Add(1)
 				go func(config *types.ClusterConfig, cluster *types.ClusterSpec) {
 					defer wg.Done()
-
-					log := logger.NewLogger(cluster.Logger)
 
 					err := deleteCluster(config, cluster, log)
 					if err != nil {

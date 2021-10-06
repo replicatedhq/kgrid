@@ -210,7 +210,7 @@ func getTestPodSpec(testID string, gridCluster *kgridv1alpha1.Cluster, app *kgri
 					Name:            "grid",
 					Command:         []string{"kgrid"},
 					Args: []string{
-						"create",
+						"run",
 						"--from-yaml",
 						"/kgrid-specs/grid.yaml",
 						"--app",
