@@ -27,6 +27,7 @@ type KgridV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	ApplicationsGetter
 	GridsGetter
+	ResultsesGetter
 	VersionsGetter
 }
 
@@ -41,6 +42,10 @@ func (c *KgridV1alpha1Client) Applications(namespace string) ApplicationInterfac
 
 func (c *KgridV1alpha1Client) Grids(namespace string) GridInterface {
 	return newGrids(c, namespace)
+}
+
+func (c *KgridV1alpha1Client) Resultses(namespace string) ResultsInterface {
+	return newResultses(c, namespace)
 }
 
 func (c *KgridV1alpha1Client) Versions(namespace string) VersionInterface {

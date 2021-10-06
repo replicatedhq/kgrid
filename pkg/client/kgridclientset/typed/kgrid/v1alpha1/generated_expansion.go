@@ -21,4 +21,6 @@ type ApplicationExpansion interface{}
 
 type GridExpansion interface{}
 
+type ResultsExpansion interface{}
+
 type VersionExpansion interface{}
