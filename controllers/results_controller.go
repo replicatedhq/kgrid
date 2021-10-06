@@ -158,6 +158,14 @@ func createOrUpdateResults(ctx context.Context, results *kgridv1alpha1.Results) 
 
 	_, err = clientset.Resultses(results.Namespace).Create(ctx, results, metav1.CreateOptions{})
 	if err != nil {
+		if kuberneteserrors.IsAlreadyExists(err) {
+			_, err := updateResults(ctx, results)
+			if err != nil {
+				return errors.Wrap(err, "failed to update results")
+			}
+			return nil
+		}
+
 		return errors.Wrap(err, "failed to create results")
 	}
 

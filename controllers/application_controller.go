@@ -208,7 +208,7 @@ func getTestPodSpec(testID string, gridCluster *kgridv1alpha1.Cluster, app *kgri
 		ObjectMeta: metav1.ObjectMeta{
 			Name: getPodName(testID),
 			Labels: map[string]string{
-				"kgrid.replicated.com/test": testID,
+				TestPodLabelKey: testID,
 			},
 		},
 		Spec: corev1.PodSpec{
