@@ -325,6 +325,159 @@
                   }
                 }
               },
+              "logger": {
+                "type": "object",
+                "properties": {
+                  "slack": {
+                    "type": "object",
+                    "properties": {
+                      "channel": {
+                        "type": "string"
+                      },
+                      "token": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "string"
+                          },
+                          "valueFrom": {
+                            "type": "object",
+                            "properties": {
+                              "secretKeyRef": {
+                                "type": "object",
+                                "required": [
+                                  "key",
+                                  "name"
+                                ],
+                                "properties": {
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "ssm": {
+                                "type": "object",
+                                "required": [
+                                  "name"
+                                ],
+                                "properties": {
+                                  "accessKeyId": {
+                                    "type": "object",
+                                    "required": [
+                                      "value"
+                                    ],
+                                    "properties": {
+                                      "value": {
+                                        "type": "string"
+                                      },
+                                      "valueFrom": {
+                                        "type": "object",
+                                        "properties": {
+                                          "secretKeyRef": {
+                                            "type": "object",
+                                            "required": [
+                                              "key",
+                                              "name"
+                                            ],
+                                            "properties": {
+                                              "key": {
+                                                "type": "string"
+                                              },
+                                              "name": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "region": {
+                                    "type": "string"
+                                  },
+                                  "secretAccessKey": {
+                                    "type": "object",
+                                    "required": [
+                                      "value"
+                                    ],
+                                    "properties": {
+                                      "value": {
+                                        "type": "string"
+                                      },
+                                      "valueFrom": {
+                                        "type": "object",
+                                        "properties": {
+                                          "secretKeyRef": {
+                                            "type": "object",
+                                            "required": [
+                                              "key",
+                                              "name"
+                                            ],
+                                            "properties": {
+                                              "key": {
+                                                "type": "string"
+                                              },
+                                              "name": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "withDecryption": {
+                                    "type": "boolean"
+                                  }
+                                }
+                              },
+                              "vault": {
+                                "type": "object",
+                                "required": [
+                                  "role",
+                                  "secret"
+                                ],
+                                "properties": {
+                                  "agentInject": {
+                                    "type": "boolean"
+                                  },
+                                  "connectionTemplate": {
+                                    "type": "string"
+                                  },
+                                  "endpoint": {
+                                    "type": "string"
+                                  },
+                                  "kubernetesAuthEndpoint": {
+                                    "type": "string"
+                                  },
+                                  "role": {
+                                    "type": "string"
+                                  },
+                                  "secret": {
+                                    "type": "string"
+                                  },
+                                  "serviceAccount": {
+                                    "type": "string"
+                                  },
+                                  "serviceAccountNamespace": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
               "name": {
                 "type": "string"
               }
