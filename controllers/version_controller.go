@@ -74,14 +74,29 @@ func (r *VersionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, errors.Wrap(err, "failed to get grids")
 	}
 
+	var tests []kgridv1alpha1.Test
+
 	for _, app := range apps.Items {
 		if app.Spec.KOTS == nil || app.Spec.KOTS.Version != "latest" {
 			continue
 		}
 
-		err = createAppTests(ctx, app.Namespace, &app, instance.Spec.KOTS.Latest, logger)
+		appTests, err := createAppTests(ctx, app.Namespace, &app, instance.Spec.KOTS.Latest, logger)
 		if err != nil {
 			return ctrl.Result{}, errors.Wrap(err, "failed to create application test")
+		}
+		tests = append(tests, appTests...)
+	}
+
+	resultName := instance.Labels["runId"]
+	if resultName != "" {
+		results := &kgridv1alpha1.Results{
+			ObjectMeta: metav1.ObjectMeta{},
+			Tests:      tests,
+		}
+		err := createOrUpdateResults(ctx, results)
+		if err != nil {
+			return ctrl.Result{}, errors.Wrapf(err, "failed to create Results %s", resultName)
 		}
 	}
 

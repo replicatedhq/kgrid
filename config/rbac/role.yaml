@@ -98,6 +98,58 @@ rules:
 - apiGroups:
   - kgrid.replicated.com
   resources:
+  - pods
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kgrid.replicated.com
+  resources:
+  - pods/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - kgrid.replicated.com
+  resources:
+  - pods/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - kgrid.replicated.com
+  resources:
+  - results
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kgrid.replicated.com
+  resources:
+  - results/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - kgrid.replicated.com
+  resources:
+  - results/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - kgrid.replicated.com
+  resources:
   - versions
   verbs:
   - create
