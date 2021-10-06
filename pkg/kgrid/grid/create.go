@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
+	ekstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/pkg/errors"
 	"github.com/replicatedhq/kgrid/pkg/kgrid/grid/types"
 	"github.com/replicatedhq/kgrid/pkg/kgrid/kubectl"
@@ -160,6 +161,7 @@ func connectExistingEKSCluster(gridName string, existingEKSCluster *types.EKSExi
 		Provider:   "aws",
 		IsExisting: true,
 		Region:     existingEKSCluster.Region,
+		Version:    "", // TODO
 		Kubeconfig: kubeConfig,
 	}
 
@@ -224,7 +226,7 @@ func createNewEKSCluter(gridName string, newEKSCluster *types.EKSNewClusterSpec,
 	}
 
 	log.Info("Creating EKS Cluster Node Group")
-	_, err = ensureEKSClusterNodeGroup(cfg, cluster, clusterName, vpc)
+	nodeGroup, err := ensureEKSClusterNodeGroup(cfg, cluster, clusterName, vpc)
 	if err != nil {
 		if !strings.Contains(err.Error(), "NodeGroup already exists") {
 			completedCh <- fmt.Sprintf("failed to create eks cluster node pool: %s", err.Error())
@@ -243,6 +245,7 @@ func createNewEKSCluter(gridName string, newEKSCluster *types.EKSNewClusterSpec,
 		Provider:    "aws",
 		IsExisting:  false,
 		Region:      newEKSCluster.Region,
+		Version:     newEKSCluster.Version,
 		Kubeconfig:  kubeConfig,
 	}
 
@@ -270,7 +273,7 @@ func createNewEKSCluter(gridName string, newEKSCluster *types.EKSNewClusterSpec,
 	}
 
 	log.Info("Waiting for nodes to become ready")
-	if err := waitForNodes(&clusterConfig); err != nil {
+	if err := waitForNodes(&clusterConfig, nodeGroup); err != nil {
 		completedCh <- fmt.Sprintf("failed to wait for nodes to join: %s", err.Error())
 		return
 	}
@@ -308,9 +311,9 @@ data:
 	return nil
 }
 
-func waitForNodes(c *types.ClusterConfig) error {
+func waitForNodes(c *types.ClusterConfig, nodeGroup *ekstypes.Nodegroup) error {
 	sleepTime := 10 * time.Second
-	for i := 0; i < 12; i++ {
+	for i := 0; i < 24; i++ {
 		nodes, err := kubectl.GetNodes(c)
 		if err != nil {
 			return errors.Wrap(err, "failed to get nodes")
@@ -324,7 +327,13 @@ func waitForNodes(c *types.ClusterConfig) error {
 				}
 			}
 		}
-		if len(nodes.Items) == numReady {
+
+		var desiredSize int
+		if nodeGroup.ScalingConfig != nil && nodeGroup.ScalingConfig.DesiredSize != nil {
+			desiredSize = int(*nodeGroup.ScalingConfig.DesiredSize)
+		}
+
+		if len(nodes.Items) == desiredSize && len(nodes.Items) == numReady {
 			return nil
 		}
 

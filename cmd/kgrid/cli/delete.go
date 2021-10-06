@@ -5,6 +5,7 @@ import (
 
 	"github.com/replicatedhq/kgrid/pkg/kgrid/grid"
 	"github.com/replicatedhq/kgrid/pkg/kgrid/grid/types"
+	"github.com/replicatedhq/kgrid/pkg/kgrid/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"sigs.k8s.io/yaml"
@@ -31,7 +32,8 @@ func DeleteCmd() *cobra.Command {
 				return err
 			}
 
-			if err := grid.Delete(v.GetString("config-file"), gridSpec); err != nil {
+			log := logger.NewLogger(gridSpec.Spec.Clusters[0].Logger)
+			if err := grid.Delete(v.GetString("config-file"), gridSpec, log); err != nil {
 				return err
 			}
 
