@@ -29,45 +29,45 @@ import (
 	rest "k8s.io/client-go/rest"
 )
 
-// ResultsesGetter has a method to return a ResultsInterface.
+// ResultsGetter has a method to return a ResultInterface.
 // A group's client should implement this interface.
-type ResultsesGetter interface {
-	Resultses(namespace string) ResultsInterface
+type ResultsGetter interface {
+	Results(namespace string) ResultInterface
 }
 
-// ResultsInterface has methods to work with Results resources.
-type ResultsInterface interface {
-	Create(ctx context.Context, results *v1alpha1.Results, opts v1.CreateOptions) (*v1alpha1.Results, error)
-	Update(ctx context.Context, results *v1alpha1.Results, opts v1.UpdateOptions) (*v1alpha1.Results, error)
+// ResultInterface has methods to work with Results resources.
+type ResultInterface interface {
+	Create(ctx context.Context, results *v1alpha1.Result, opts v1.CreateOptions) (*v1alpha1.Result, error)
+	Update(ctx context.Context, results *v1alpha1.Result, opts v1.UpdateOptions) (*v1alpha1.Result, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.Results, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.ResultsList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.Result, error)
+	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.ResultList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Results, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Result, err error)
 	ResultsExpansion
 }
 
-// resultses implements ResultsInterface
-type resultses struct {
+// results implements ResultInterface
+type results struct {
 	client rest.Interface
 	ns     string
 }
 
-// newResultses returns a Resultses
-func newResultses(c *KgridV1alpha1Client, namespace string) *resultses {
-	return &resultses{
+// newResults returns a Results
+func newResults(c *KgridV1alpha1Client, namespace string) *results {
+	return &results{
 		client: c.RESTClient(),
 		ns:     namespace,
 	}
 }
 
 // Get takes name of the results, and returns the corresponding results object, and an error if there is any.
-func (c *resultses) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Results, err error) {
-	result = &v1alpha1.Results{}
+func (c *results) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Result, err error) {
+	result = &v1alpha1.Result{}
 	err = c.client.Get().
 		Namespace(c.ns).
-		Resource("resultses").
+		Resource("results").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
 		Do(ctx).
@@ -75,16 +75,16 @@ func (c *resultses) Get(ctx context.Context, name string, options v1.GetOptions)
 	return
 }
 
-// List takes label and field selectors, and returns the list of Resultses that match those selectors.
-func (c *resultses) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ResultsList, err error) {
+// List takes label and field selectors, and returns the list of Results that match those selectors.
+func (c *results) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ResultList, err error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
 	}
-	result = &v1alpha1.ResultsList{}
+	result = &v1alpha1.ResultList{}
 	err = c.client.Get().
 		Namespace(c.ns).
-		Resource("resultses").
+		Resource("results").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Do(ctx).
@@ -92,8 +92,8 @@ func (c *resultses) List(ctx context.Context, opts v1.ListOptions) (result *v1al
 	return
 }
 
-// Watch returns a watch.Interface that watches the requested resultses.
-func (c *resultses) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+// Watch returns a watch.Interface that watches the requested results.
+func (c *results) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -101,18 +101,18 @@ func (c *resultses) Watch(ctx context.Context, opts v1.ListOptions) (watch.Inter
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
-		Resource("resultses").
+		Resource("results").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Watch(ctx)
 }
 
 // Create takes the representation of a results and creates it.  Returns the server's representation of the results, and an error, if there is any.
-func (c *resultses) Create(ctx context.Context, results *v1alpha1.Results, opts v1.CreateOptions) (result *v1alpha1.Results, err error) {
-	result = &v1alpha1.Results{}
+func (c *results) Create(ctx context.Context, results *v1alpha1.Result, opts v1.CreateOptions) (result *v1alpha1.Result, err error) {
+	result = &v1alpha1.Result{}
 	err = c.client.Post().
 		Namespace(c.ns).
-		Resource("resultses").
+		Resource("results").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(results).
 		Do(ctx).
@@ -121,11 +121,11 @@ func (c *resultses) Create(ctx context.Context, results *v1alpha1.Results, opts 
 }
 
 // Update takes the representation of a results and updates it. Returns the server's representation of the results, and an error, if there is any.
-func (c *resultses) Update(ctx context.Context, results *v1alpha1.Results, opts v1.UpdateOptions) (result *v1alpha1.Results, err error) {
-	result = &v1alpha1.Results{}
+func (c *results) Update(ctx context.Context, results *v1alpha1.Result, opts v1.UpdateOptions) (result *v1alpha1.Result, err error) {
+	result = &v1alpha1.Result{}
 	err = c.client.Put().
 		Namespace(c.ns).
-		Resource("resultses").
+		Resource("results").
 		Name(results.Name).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(results).
@@ -135,10 +135,10 @@ func (c *resultses) Update(ctx context.Context, results *v1alpha1.Results, opts 
 }
 
 // Delete takes name of the results and deletes it. Returns an error if one occurs.
-func (c *resultses) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+func (c *results) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
-		Resource("resultses").
+		Resource("results").
 		Name(name).
 		Body(&opts).
 		Do(ctx).
@@ -146,14 +146,14 @@ func (c *resultses) Delete(ctx context.Context, name string, opts v1.DeleteOptio
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *resultses) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+func (c *results) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
 	var timeout time.Duration
 	if listOpts.TimeoutSeconds != nil {
 		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
 		Namespace(c.ns).
-		Resource("resultses").
+		Resource("results").
 		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(&opts).
@@ -162,11 +162,11 @@ func (c *resultses) DeleteCollection(ctx context.Context, opts v1.DeleteOptions,
 }
 
 // Patch applies the patch and returns the patched results.
-func (c *resultses) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Results, err error) {
-	result = &v1alpha1.Results{}
+func (c *results) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Result, err error) {
+	result = &v1alpha1.Result{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
-		Resource("resultses").
+		Resource("results").
 		Name(name).
 		SubResource(subresources...).
 		VersionedParams(&opts, scheme.ParameterCodec).

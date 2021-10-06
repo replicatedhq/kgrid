@@ -10,16 +10,16 @@ metadata:
 spec:
   group: kgrid.replicated.com
   names:
-    kind: Results
-    listKind: ResultsList
+    kind: Result
+    listKind: ResultList
     plural: results
-    singular: results
+    singular: result
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Results is the Schema for the results API
+        description: Result is the Schema for the result API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -33,7 +33,7 @@ spec:
             type: string
           metadata:
             type: object
-          results:
+          result:
             items:
               properties:
                 id:
@@ -46,7 +46,7 @@ spec:
               type: object
             type: array
         required:
-        - results
+        - result
         type: object
     served: true
     storage: true
