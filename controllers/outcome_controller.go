@@ -140,7 +140,7 @@ func listOutcomes(ctx context.Context, namespace string) (*kgridv1alpha1.Outcome
 
 	outcomes, err := clientset.Outcomes(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to list apps")
+		return nil, errors.Wrap(err, "failed to list outcomes")
 	}
 
 	return outcomes, nil
@@ -154,7 +154,7 @@ func createOutcome(ctx context.Context, outcome *kgridv1alpha1.Outcome) error {
 
 	clientset, err := kgridclientset.NewForConfig(cfg)
 	if err != nil {
-		return errors.Wrap(err, "failed to create app client")
+		return errors.Wrap(err, "failed to create outcome client")
 	}
 
 	_, err = clientset.Outcomes(outcome.Namespace).Create(ctx, outcome, metav1.CreateOptions{})
@@ -177,7 +177,7 @@ func updateOutcome(ctx context.Context, outcome *kgridv1alpha1.Outcome) (*kgridv
 
 	clientset, err := kgridclientset.NewForConfig(cfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create app client")
+		return nil, errors.Wrap(err, "failed to create outcome client")
 	}
 
 	outcome, err = clientset.Outcomes(outcome.Namespace).Update(ctx, outcome, metav1.UpdateOptions{})
