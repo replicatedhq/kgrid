@@ -134,5 +134,5 @@ func getTestResultFromPod(pod *corev1.Pod) kgridv1alpha1.TestResultStatus {
 		return kgridv1alpha1.TestResultUnknown
 	}
 
-	return ""
+	return kgridv1alpha1.TestResultUnknown
 }

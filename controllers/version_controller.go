@@ -43,6 +43,8 @@ type VersionReconciler struct {
 //+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=versions/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=versions/finalizers,verbs=update
 
+//+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
+
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
@@ -74,7 +76,7 @@ func (r *VersionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, errors.Wrap(err, "failed to get grids")
 	}
 
-	var tests []kgridv1alpha1.Test
+	tests := []kgridv1alpha1.Test{}
 
 	for _, app := range apps.Items {
 		if app.Spec.KOTS == nil || app.Spec.KOTS.Version != "latest" {
