@@ -72,6 +72,18 @@ rules:
 - apiGroups:
   - kgrid.replicated.com
   resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kgrid.replicated.com
+  resources:
   - grids
   verbs:
   - create
