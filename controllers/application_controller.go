@@ -50,9 +50,6 @@ type ApplicationReconciler struct {
 //+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=applications,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=applications/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=applications/finalizers,verbs=update
-//+kubebuilder:rbac:groups="",namespace=kgrid-system,resources=pods,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups="",namespace=kgrid-system,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups="",namespace=kgrid-system,resources=secrets,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -85,7 +82,7 @@ func (r *ApplicationReconciler) createJob(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, errors.Wrap(err, "failed to find version to test application with")
 	}
 
-	err = createAppTests(ctx, instance.Namespace, instance, version, logger)
+	_, err = createAppTests(ctx, instance.Namespace, instance, version, logger)
 	if err != nil {
 		return ctrl.Result{}, errors.Wrap(err, "failed to get application instance")
 	}
@@ -115,7 +112,7 @@ func getPodName(testID string) string {
 	return fmt.Sprintf("test-%s", testID)
 }
 
-func createAppTests(ctx context.Context, namespace string, app *kgridv1alpha1.Application, version string, logger logr.Logger) error {
+func createAppTests(ctx context.Context, namespace string, app *kgridv1alpha1.Application, version string, logger logr.Logger) ([]kgridv1alpha1.Test, error) {
 	channelID := ""
 	channelSequence := uint(0)
 	appClusters := []string{}
@@ -128,23 +125,25 @@ func createAppTests(ctx context.Context, namespace string, app *kgridv1alpha1.Ap
 		}
 		appClusters = app.Spec.KOTS.Clusters
 	} else {
-		return errors.New("no supported applications found")
+		return nil, errors.New("no supported applications found")
 	}
 
 	grids, err := listGrids(ctx, namespace)
 	if err != nil {
-		return errors.Wrap(err, "failed to get grids")
+		return nil, errors.Wrap(err, "failed to get grids")
 	}
 
 	cfg, err := config.GetRESTConfig()
 	if err != nil {
-		return errors.Wrap(err, "failed to get config")
+		return nil, errors.Wrap(err, "failed to get config")
 	}
 
 	clientset, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		return errors.Wrap(err, "failed to create k8s client")
+		return nil, errors.Wrap(err, "failed to create k8s client")
 	}
+
+	var tests []kgridv1alpha1.Test
 
 	foundCluster := false
 	for _, grid := range grids.Items {
@@ -157,39 +156,47 @@ func createAppTests(ctx context.Context, namespace string, app *kgridv1alpha1.Ap
 				foundCluster = true
 
 				testID := getTestID(gridCluster.Name, version, channelID, channelSequence)
-				_, err := clientset.CoreV1().Pods(app.Namespace).Get(ctx, getPodName(testID), metav1.GetOptions{})
+				pod, err := clientset.CoreV1().Pods(app.Namespace).Get(ctx, getPodName(testID), metav1.GetOptions{})
 				if err == nil {
+					tests = append(tests, kgridv1alpha1.Test{
+						ID:     testID,
+						Result: getTestResultFromPod(pod),
+					})
 					continue
 				}
 				if !kuberneteserrors.IsNotFound(err) {
-					return errors.Wrap(err, "failed to check if test exists")
+					return nil, errors.Wrap(err, "failed to check if test exists")
 				}
 
 				configSpec, err := getKotsTestConfigMap(ctx, testID, &gridCluster, app, version)
 				if err != nil {
-					return errors.Wrap(err, "failed to build test configmap")
+					return nil, errors.Wrap(err, "failed to build test configmap")
 				}
 
 				_, err = clientset.CoreV1().ConfigMaps(app.Namespace).Create(ctx, configSpec, metav1.CreateOptions{})
 				if err != nil && !kuberneteserrors.IsAlreadyExists(err) {
-					return errors.Wrap(err, "failed to create test config")
+					return nil, errors.Wrap(err, "failed to create test config")
 				}
 
 				podSpec := getTestPodSpec(testID, &gridCluster, app)
 				_, err = clientset.CoreV1().Pods(app.Namespace).Create(ctx, podSpec, metav1.CreateOptions{})
 				if err != nil {
-					return errors.Wrap(err, "failed to create test")
+					return nil, errors.Wrap(err, "failed to create test")
 				}
+				tests = append(tests, kgridv1alpha1.Test{
+					ID:     testID,
+					Result: kgridv1alpha1.TestResultPending,
+				})
 			}
 		}
 	}
 
 	if !foundCluster {
 		logger.Info("no cluster found for app", "appName", app.Name)
-		return nil
+		return nil, nil
 	}
 
-	return nil
+	return tests, nil
 }
 
 func getTestPodSpec(testID string, gridCluster *kgridv1alpha1.Cluster, app *kgridv1alpha1.Application) *corev1.Pod {
@@ -197,6 +204,9 @@ func getTestPodSpec(testID string, gridCluster *kgridv1alpha1.Cluster, app *kgri
 	podSpec := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: getPodName(testID),
+			Labels: map[string]string{
+				TestPodLabelKey: testID,
+			},
 		},
 		Spec: corev1.PodSpec{
 			Affinity: &corev1.Affinity{

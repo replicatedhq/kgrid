@@ -42,7 +42,6 @@ spec:
                   type: string
               required:
               - id
-              - result
               type: object
             type: array
         required:

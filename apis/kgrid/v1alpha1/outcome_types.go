@@ -34,7 +34,7 @@ const (
 
 type Test struct {
 	ID     string     `json:"id"`
-	Result TestResult `json:"result"`
+	Result TestResult `json:"result,omitempty"`
 }
 
 //+kubebuilder:object:root=true

@@ -43,6 +43,8 @@ type VersionReconciler struct {
 //+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=versions/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=versions/finalizers,verbs=update
 
+//+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
+
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
@@ -74,14 +76,32 @@ func (r *VersionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, errors.Wrap(err, "failed to get grids")
 	}
 
+	tests := []kgridv1alpha1.Test{}
+
 	for _, app := range apps.Items {
 		if app.Spec.KOTS == nil || app.Spec.KOTS.Version != "latest" {
 			continue
 		}
 
-		err = createAppTests(ctx, app.Namespace, &app, instance.Spec.KOTS.Latest, logger)
+		appTests, err := createAppTests(ctx, app.Namespace, &app, instance.Spec.KOTS.Latest, logger)
 		if err != nil {
 			return ctrl.Result{}, errors.Wrap(err, "failed to create application test")
+		}
+		tests = append(tests, appTests...)
+	}
+
+	outcomeName := instance.Labels["runId"]
+	if outcomeName != "" {
+		outcome := &kgridv1alpha1.Outcome{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      outcomeName,
+				Namespace: instance.Namespace,
+			},
+			Tests: tests,
+		}
+		err := createOutcome(ctx, outcome)
+		if err != nil {
+			return ctrl.Result{}, errors.Wrapf(err, "failed to create Outcome %s", outcomeName)
 		}
 	}
 
