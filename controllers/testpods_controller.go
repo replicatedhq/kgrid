@@ -122,7 +122,7 @@ func (r *TestPodReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func getTestResultFromPod(pod *corev1.Pod) kgridv1alpha1.TestResult {
+func getTestResultFromPod(pod *corev1.Pod) kgridv1alpha1.TestResultStatus {
 	switch pod.Status.Phase {
 	case corev1.PodSucceeded:
 		return kgridv1alpha1.TestResultPass
