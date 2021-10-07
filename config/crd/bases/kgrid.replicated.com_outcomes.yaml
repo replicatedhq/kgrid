@@ -6,20 +6,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: results.kgrid.replicated.com
+  name: outcomes.kgrid.replicated.com
 spec:
   group: kgrid.replicated.com
   names:
-    kind: Results
-    listKind: ResultsList
-    plural: results
-    singular: results
+    kind: Outcome
+    listKind: OutcomeList
+    plural: outcomes
+    singular: outcome
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Results is the Schema for the results API
+        description: Outcome is the Schema for the results API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -33,7 +33,7 @@ spec:
             type: string
           metadata:
             type: object
-          results:
+          tests:
             items:
               properties:
                 id:
@@ -46,7 +46,7 @@ spec:
               type: object
             type: array
         required:
-        - results
+        - tests
         type: object
     served: true
     storage: true

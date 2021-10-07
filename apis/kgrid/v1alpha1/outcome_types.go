@@ -42,23 +42,23 @@ type Test struct {
 //+genclient
 //+k8s:openapi-gen=true
 
-// Results is the Schema for the results API
-type Results struct {
+// Outcome is the Schema for the results API
+type Outcome struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Tests []Test `json:"results"`
+	Tests []Test `json:"tests"`
 }
 
 //+kubebuilder:object:root=true
 
-// ResultsList contains a list of Results
-type ResultsList struct {
+// OutcomeList contains a list of Results
+type OutcomeList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Results `json:"items"`
+	Items           []Outcome `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Results{}, &ResultsList{})
+	SchemeBuilder.Register(&Outcome{}, &OutcomeList{})
 }
