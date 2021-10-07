@@ -23,18 +23,18 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-type TestResultStatus string
+type TestResult string
 
 const (
-	TestResultPass    TestResultStatus = "Pass"
-	TestResultFail    TestResultStatus = "Fail"
-	TestResultUnknown TestResultStatus = "Unknown"
-	TestResultPending TestResultStatus = "Pending"
+	TestResultPass    TestResult = "Pass"
+	TestResultFail    TestResult = "Fail"
+	TestResultUnknown TestResult = "Unknown"
+	TestResultPending TestResult = "Pending"
 )
 
 type Test struct {
-	ID     string           `json:"id"`
-	Result TestResultStatus `json:"result,omitempty"`
+	ID     string     `json:"id"`
+	Result TestResult `json:"result,omitempty"`
 }
 
 //+kubebuilder:object:root=true
