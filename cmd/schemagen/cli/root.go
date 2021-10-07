@@ -79,8 +79,8 @@ func generateSchemas(v *viper.Viper) error {
 			"version-kgrid-v1alpha1.json",
 		},
 		{
-			"kgrid.replicated.com_results.yaml",
-			"results-kgrid-v1alpha1.json",
+			"kgrid.replicated.com_outcomes.yaml",
+			"outcome-kgrid-v1alpha1.json",
 		},
 	}
 

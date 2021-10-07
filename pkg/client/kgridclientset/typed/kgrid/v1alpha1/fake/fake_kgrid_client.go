@@ -35,8 +35,8 @@ func (c *FakeKgridV1alpha1) Grids(namespace string) v1alpha1.GridInterface {
 	return &FakeGrids{c, namespace}
 }
 
-func (c *FakeKgridV1alpha1) Results(namespace string) v1alpha1.ResultInterface {
-	return &FakeResults{c, namespace}
+func (c *FakeKgridV1alpha1) Outcomes(namespace string) v1alpha1.OutcomeInterface {
+	return &FakeOutcomes{c, namespace}
 }
 
 func (c *FakeKgridV1alpha1) Versions(namespace string) v1alpha1.VersionInterface {

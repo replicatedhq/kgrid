@@ -1,8 +1,8 @@
 {
-  "description": "Result is the Schema for the result API",
+  "description": "Outcome is the Schema for the results API",
   "type": "object",
   "required": [
-    "result"
+    "tests"
   ],
   "properties": {
     "apiVersion": {
@@ -16,7 +16,7 @@
     "metadata": {
       "type": "object"
     },
-    "result": {
+    "tests": {
       "type": "array",
       "items": {
         "type": "object",
