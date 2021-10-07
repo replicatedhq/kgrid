@@ -78,10 +78,6 @@ func generateSchemas(v *viper.Viper) error {
 			"kgrid.replicated.com_versions.yaml",
 			"version-kgrid-v1alpha1.json",
 		},
-		{
-			"kgrid.replicated.com_results.yaml",
-			"results-kgrid-v1alpha1.json",
-		},
 	}
 
 	for _, file := range files {

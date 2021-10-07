@@ -29,31 +29,31 @@ import (
 	testing "k8s.io/client-go/testing"
 )
 
-// FakeResults implements ResultInterface
-type FakeResults struct {
+// FakeResultses implements ResultsInterface
+type FakeResultses struct {
 	Fake *FakeKgridV1alpha1
 	ns   string
 }
 
-var resultsResource = schema.GroupVersionResource{Group: "kgrid", Version: "v1alpha1", Resource: "results"}
+var resultsesResource = schema.GroupVersionResource{Group: "kgrid", Version: "v1alpha1", Resource: "resultses"}
 
-var resultsKind = schema.GroupVersionKind{Group: "kgrid", Version: "v1alpha1", Kind: "Results"}
+var resultsesKind = schema.GroupVersionKind{Group: "kgrid", Version: "v1alpha1", Kind: "Results"}
 
 // Get takes name of the results, and returns the corresponding results object, and an error if there is any.
-func (c *FakeResults) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Result, err error) {
+func (c *FakeResultses) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Results, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(resultsResource, c.ns, name), &v1alpha1.Result{})
+		Invokes(testing.NewGetAction(resultsesResource, c.ns, name), &v1alpha1.Results{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.Result), err
+	return obj.(*v1alpha1.Results), err
 }
 
-// List takes label and field selectors, and returns the list of Results that match those selectors.
-func (c *FakeResults) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ResultList, err error) {
+// List takes label and field selectors, and returns the list of Resultses that match those selectors.
+func (c *FakeResultses) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ResultsList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(resultsResource, resultsKind, c.ns, opts), &v1alpha1.ResultList{})
+		Invokes(testing.NewListAction(resultsesResource, resultsesKind, c.ns, opts), &v1alpha1.ResultsList{})
 
 	if obj == nil {
 		return nil, err
@@ -63,8 +63,8 @@ func (c *FakeResults) List(ctx context.Context, opts v1.ListOptions) (result *v1
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha1.ResultList{ListMeta: obj.(*v1alpha1.ResultList).ListMeta}
-	for _, item := range obj.(*v1alpha1.ResultList).Items {
+	list := &v1alpha1.ResultsList{ListMeta: obj.(*v1alpha1.ResultsList).ListMeta}
+	for _, item := range obj.(*v1alpha1.ResultsList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -72,58 +72,58 @@ func (c *FakeResults) List(ctx context.Context, opts v1.ListOptions) (result *v1
 	return list, err
 }
 
-// Watch returns a watch.Interface that watches the requested results.
-func (c *FakeResults) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+// Watch returns a watch.Interface that watches the requested resultses.
+func (c *FakeResultses) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(resultsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchAction(resultsesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a results and creates it.  Returns the server's representation of the results, and an error, if there is any.
-func (c *FakeResults) Create(ctx context.Context, results *v1alpha1.Result, opts v1.CreateOptions) (result *v1alpha1.Result, err error) {
+func (c *FakeResultses) Create(ctx context.Context, results *v1alpha1.Results, opts v1.CreateOptions) (result *v1alpha1.Results, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(resultsResource, c.ns, results), &v1alpha1.Result{})
+		Invokes(testing.NewCreateAction(resultsesResource, c.ns, results), &v1alpha1.Results{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.Result), err
+	return obj.(*v1alpha1.Results), err
 }
 
 // Update takes the representation of a results and updates it. Returns the server's representation of the results, and an error, if there is any.
-func (c *FakeResults) Update(ctx context.Context, results *v1alpha1.Result, opts v1.UpdateOptions) (result *v1alpha1.Result, err error) {
+func (c *FakeResultses) Update(ctx context.Context, results *v1alpha1.Results, opts v1.UpdateOptions) (result *v1alpha1.Results, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(resultsResource, c.ns, results), &v1alpha1.Result{})
+		Invokes(testing.NewUpdateAction(resultsesResource, c.ns, results), &v1alpha1.Results{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.Result), err
+	return obj.(*v1alpha1.Results), err
 }
 
 // Delete takes name of the results and deletes it. Returns an error if one occurs.
-func (c *FakeResults) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+func (c *FakeResultses) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(resultsResource, c.ns, name), &v1alpha1.Result{})
+		Invokes(testing.NewDeleteAction(resultsesResource, c.ns, name), &v1alpha1.Results{})
 
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeResults) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(resultsResource, c.ns, listOpts)
+func (c *FakeResultses) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(resultsesResource, c.ns, listOpts)
 
-	_, err := c.Fake.Invokes(action, &v1alpha1.ResultList{})
+	_, err := c.Fake.Invokes(action, &v1alpha1.ResultsList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched results.
-func (c *FakeResults) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Result, err error) {
+func (c *FakeResultses) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Results, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(resultsResource, c.ns, name, pt, data, subresources...), &v1alpha1.Result{})
+		Invokes(testing.NewPatchSubresourceAction(resultsesResource, c.ns, name, pt, data, subresources...), &v1alpha1.Results{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.Result), err
+	return obj.(*v1alpha1.Results), err
 }
