@@ -5,6 +5,7 @@ resources:
 - bases/kgrid.replicated.com_applications.yaml
 - bases/kgrid.replicated.com_grids.yaml
 - bases/kgrid.replicated.com_versions.yaml
+- bases/kgrid.replicated.com_outcomes.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
