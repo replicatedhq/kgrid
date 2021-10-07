@@ -273,6 +273,10 @@ func createNewEKSCluter(gridName string, newEKSCluster *types.EKSNewClusterSpec,
 		completedCh <- fmt.Sprintf("failed to ensure aws-auth configmap: %s", err.Error())
 	}
 
+	if err := ensureEKSDefaultStorageClass(&clusterConfig); err != nil {
+		completedCh <- fmt.Sprintf("failed to ensure default storage class: %s", err.Error())
+	}
+
 	log.Info("Waiting for nodes to become ready")
 	if err := waitForNodes(&clusterConfig, nodeGroup); err != nil {
 		completedCh <- fmt.Sprintf("failed to wait for nodes to join: %s", err.Error())
@@ -305,6 +309,28 @@ data:
 
 `
 	yamlDoc = fmt.Sprintf(yamlDoc, roleArn)
+	if err := kubectl.Apply(c, yamlDoc); err != nil {
+		return errors.Wrap(err, "failed to apply aws-auth configmap")
+	}
+
+	return nil
+}
+
+func ensureEKSDefaultStorageClass(c *types.ClusterConfig) error {
+	// This is a workaround for apps that specify `default` as their storage class
+
+	yamlDoc := `
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: default
+parameters:
+  fsType: ext4
+  type: gp2
+provisioner: kubernetes.io/aws-ebs
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer`
+
 	if err := kubectl.Apply(c, yamlDoc); err != nil {
 		return errors.Wrap(err, "failed to apply aws-auth configmap")
 	}
