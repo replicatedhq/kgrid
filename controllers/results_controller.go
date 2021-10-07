@@ -145,7 +145,7 @@ func listResults(ctx context.Context, namespace string) (*kgridv1alpha1.TestResu
 	return results, nil
 }
 
-func createOrUpdateResults(ctx context.Context, results *kgridv1alpha1.TestResult) error {
+func createResults(ctx context.Context, results *kgridv1alpha1.TestResult) error {
 	cfg, err := config.GetRESTConfig()
 	if err != nil {
 		return errors.Wrap(err, "failed to get config")
@@ -159,10 +159,6 @@ func createOrUpdateResults(ctx context.Context, results *kgridv1alpha1.TestResul
 	_, err = clientset.TestResults(results.Namespace).Create(ctx, results, metav1.CreateOptions{})
 	if err != nil {
 		if kuberneteserrors.IsAlreadyExists(err) {
-			_, err := updateResults(ctx, results)
-			if err != nil {
-				return errors.Wrap(err, "failed to update results")
-			}
 			return nil
 		}
 

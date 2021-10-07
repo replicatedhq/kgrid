@@ -99,7 +99,7 @@ func (r *VersionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			},
 			Tests: tests,
 		}
-		err := createOrUpdateResults(ctx, results)
+		err := createResults(ctx, results)
 		if err != nil {
 			return ctrl.Result{}, errors.Wrapf(err, "failed to create Results %s", resultName)
 		}
