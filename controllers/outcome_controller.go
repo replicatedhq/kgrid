@@ -76,6 +76,7 @@ func (r *OutcomeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, errors.Wrap(err, "failed to create client")
 	}
 
+	// TODO this could become inefficient if there get to be a lot of test pods
 	pods, err := clientset.CoreV1().Pods(instance.Namespace).List(ctx, metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("%s=", TestPodLabelKey),
 	})

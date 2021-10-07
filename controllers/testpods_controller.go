@@ -75,6 +75,7 @@ func (r *TestPodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
+	// TODO this could become inefficient if there get to be a lot of outcomes
 	outcomes, err := listOutcomes(ctx, pod.Namespace)
 	if err != nil {
 		return ctrl.Result{}, errors.Wrap(err, "failed to get test pod")

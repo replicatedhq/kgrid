@@ -8,42 +8,6 @@ metadata:
   namespace: kgrid-system
 rules:
 - apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - secrets
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
   - kgrid.replicated.com
   resources:
   - applications
@@ -110,6 +74,32 @@ rules:
 - apiGroups:
   - kgrid.replicated.com
   resources:
+  - outcomes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kgrid.replicated.com
+  resources:
+  - outcomes/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - kgrid.replicated.com
+  resources:
+  - outcomes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - kgrid.replicated.com
+  resources:
   - pods
   verbs:
   - create
@@ -129,32 +119,6 @@ rules:
   - kgrid.replicated.com
   resources:
   - pods/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - kgrid.replicated.com
-  resources:
-  - testresults
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - kgrid.replicated.com
-  resources:
-  - testresults/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - kgrid.replicated.com
-  resources:
-  - testresults/status
   verbs:
   - get
   - patch
