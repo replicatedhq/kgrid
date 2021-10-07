@@ -75,16 +75,16 @@ func (r *TestPodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
-	results, err := listResults(ctx, pod.Namespace)
+	outcomes, err := listOutcomes(ctx, pod.Namespace)
 	if err != nil {
 		return ctrl.Result{}, errors.Wrap(err, "failed to get test pod")
 	}
-	for _, results := range results.Items {
+	for _, outcome := range outcomes.Items {
 		updated := false
 
-		for i, test := range results.Tests {
+		for i, test := range outcome.Tests {
 			if test.ID == testID {
-				results.Tests[i].Result = testResult
+				outcome.Tests[i].Result = testResult
 				updated = true
 			}
 		}
@@ -93,7 +93,7 @@ func (r *TestPodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			continue
 		}
 
-		_, err = updateResults(ctx, &results)
+		_, err = updateOutcome(ctx, &outcome)
 		if err != nil {
 			return ctrl.Result{}, errors.Wrap(err, "failed to update results")
 		}

@@ -90,18 +90,18 @@ func (r *VersionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		tests = append(tests, appTests...)
 	}
 
-	resultName := instance.Labels["runId"]
-	if resultName != "" {
-		results := &kgridv1alpha1.TestResult{
+	outcomeName := instance.Labels["runId"]
+	if outcomeName != "" {
+		outcome := &kgridv1alpha1.Outcome{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      resultName,
+				Name:      outcomeName,
 				Namespace: instance.Namespace,
 			},
 			Tests: tests,
 		}
-		err := createResults(ctx, results)
+		err := createOutcome(ctx, outcome)
 		if err != nil {
-			return ctrl.Result{}, errors.Wrapf(err, "failed to create Results %s", resultName)
+			return ctrl.Result{}, errors.Wrapf(err, "failed to create Outcome %s", outcomeName)
 		}
 	}
 

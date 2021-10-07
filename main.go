@@ -118,12 +118,12 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Version")
 		os.Exit(1)
 	}
-	if err = (&controllers.ResultsReconciler{
+	if err = (&controllers.OutcomeReconciler{
 		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("kgrid").WithName("Result"),
+		Log:    ctrl.Log.WithName("controllers").WithName("kgrid").WithName("Outcome"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Result")
+		setupLog.Error(err, "unable to create controller", "controller", "Outcome")
 		os.Exit(1)
 	}
 	if err = (&controllers.TestPodReconciler{

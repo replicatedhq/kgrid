@@ -36,35 +36,35 @@ import (
 	"github.com/replicatedhq/kgrid/pkg/config"
 )
 
-// ResultsReconciler reconciles a Results object
-type ResultsReconciler struct {
+// OutcomeReconciler reconciles a Outcome object
+type OutcomeReconciler struct {
 	client.Client
 	Log    logr.Logger
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=testresults,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=testresults/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=testresults/finalizers,verbs=update
+//+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=outcomes,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=outcomes/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=outcomes/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
-// the Results object against the actual cluster state, and then
+// the Outcome object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 //
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
-func (r *ResultsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *OutcomeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	// This only runs on create events to get the statuses of any pods that might have completed
-	// before this was created. The test pods controller will update this Result with future changes.
-	instance := &kgridv1alpha1.TestResult{}
+	// before this was created. The test pods controller will update this Outcome with future changes.
+	instance := &kgridv1alpha1.Outcome{}
 	err := r.Get(context.Background(), req.NamespacedName, instance)
 	if err != nil {
 		if kuberneteserrors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
-		return ctrl.Result{}, errors.Wrap(err, "failed to get result instance")
+		return ctrl.Result{}, errors.Wrap(err, "failed to get outcome instance")
 	}
 
 	cfg, err := config.GetRESTConfig()
@@ -95,7 +95,7 @@ func (r *ResultsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
-	_, err = updateResults(ctx, instance)
+	_, err = updateOutcome(ctx, instance)
 	if err != nil {
 		return ctrl.Result{}, nil
 	}
@@ -104,7 +104,7 @@ func (r *ResultsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *ResultsReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *OutcomeReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	isCreate := predicate.Funcs{
 		CreateFunc: func(e event.CreateEvent) bool {
 			return true
@@ -121,12 +121,12 @@ func (r *ResultsReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&kgridv1alpha1.TestResult{}).
+		For(&kgridv1alpha1.Outcome{}).
 		WithEventFilter(isCreate).
 		Complete(r)
 }
 
-func listResults(ctx context.Context, namespace string) (*kgridv1alpha1.TestResultList, error) {
+func listOutcomes(ctx context.Context, namespace string) (*kgridv1alpha1.OutcomeList, error) {
 	cfg, err := config.GetRESTConfig()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get config")
@@ -137,15 +137,15 @@ func listResults(ctx context.Context, namespace string) (*kgridv1alpha1.TestResu
 		return nil, errors.Wrap(err, "failed to create app client")
 	}
 
-	results, err := clientset.TestResults(namespace).List(ctx, metav1.ListOptions{})
+	outcomes, err := clientset.Outcomes(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list apps")
 	}
 
-	return results, nil
+	return outcomes, nil
 }
 
-func createResults(ctx context.Context, results *kgridv1alpha1.TestResult) error {
+func createOutcome(ctx context.Context, outcome *kgridv1alpha1.Outcome) error {
 	cfg, err := config.GetRESTConfig()
 	if err != nil {
 		return errors.Wrap(err, "failed to get config")
@@ -156,19 +156,19 @@ func createResults(ctx context.Context, results *kgridv1alpha1.TestResult) error
 		return errors.Wrap(err, "failed to create app client")
 	}
 
-	_, err = clientset.TestResults(results.Namespace).Create(ctx, results, metav1.CreateOptions{})
+	_, err = clientset.Outcomes(outcome.Namespace).Create(ctx, outcome, metav1.CreateOptions{})
 	if err != nil {
 		if kuberneteserrors.IsAlreadyExists(err) {
 			return nil
 		}
 
-		return errors.Wrap(err, "failed to create results")
+		return errors.Wrap(err, "failed to create outcome")
 	}
 
 	return nil
 }
 
-func updateResults(ctx context.Context, results *kgridv1alpha1.TestResult) (*kgridv1alpha1.TestResult, error) {
+func updateOutcome(ctx context.Context, outcome *kgridv1alpha1.Outcome) (*kgridv1alpha1.Outcome, error) {
 	cfg, err := config.GetRESTConfig()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get config")
@@ -179,10 +179,10 @@ func updateResults(ctx context.Context, results *kgridv1alpha1.TestResult) (*kgr
 		return nil, errors.Wrap(err, "failed to create app client")
 	}
 
-	results, err = clientset.TestResults(results.Namespace).Update(ctx, results, metav1.UpdateOptions{})
+	outcome, err = clientset.Outcomes(outcome.Namespace).Update(ctx, outcome, metav1.UpdateOptions{})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to update results")
+		return nil, errors.Wrap(err, "failed to update outcome")
 	}
 
-	return results, nil
+	return outcome, nil
 }
