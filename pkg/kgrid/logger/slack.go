@@ -29,7 +29,9 @@ type SlackLogger struct {
 }
 
 func NewSlackLogger(loggerSpec *types.SlackLoggerSpec) Logger {
-	l := &SlackLogger{}
+	l := &SlackLogger{
+		printToLogs: true,
+	}
 
 	token, err := loggerSpec.Token.String()
 	if err != nil {
