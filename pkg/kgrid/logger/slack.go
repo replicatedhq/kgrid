@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/pkg/errors"
 	"github.com/replicatedhq/kgrid/pkg/kgrid/grid/types"
 	"github.com/slack-go/slack"
 )
@@ -24,8 +23,9 @@ type SlackLogger struct {
 	threadDoneCh   chan struct{}
 
 	// general logger stuff
-	isSilent  bool
-	isVerbose bool
+	isSilent    bool
+	isVerbose   bool
+	printToLogs bool
 }
 
 func NewSlackLogger(loggerSpec *types.SlackLoggerSpec) Logger {
@@ -34,14 +34,14 @@ func NewSlackLogger(loggerSpec *types.SlackLoggerSpec) Logger {
 	token, err := loggerSpec.Token.String()
 	if err != nil {
 		log.Println("failed to get token for slack logger", err)
-		l.isSilent = true
+		l.printToLogs = true
 	} else {
 		l.token = token
 	}
 
 	l.channel = loggerSpec.Channel
 
-	if !l.isSilent {
+	if !l.isSilent && l.token != "" {
 		l.client = slack.New(l.token)
 	}
 
@@ -67,15 +67,19 @@ func (l *SlackLogger) StartThread(msg string, args ...interface{}) {
 		return
 	}
 
+	if l.printToLogs {
+		log.Printf(l.initialMessage)
+	}
+
 	l.initialMessage = fmt.Sprintf(msg, args...)
 	channelID, timestamp, err := l.client.PostMessage(
 		l.channel,
-		slack.MsgOptionText(l.initialMessage, false), // TODO: needs app slug, release sequense
+		slack.MsgOptionText(l.initialMessage, false),
 		slack.MsgOptionAsUser(true),
 	)
 	if err != nil {
 		log.Println("failed to send slack message", err)
-		l.isSilent = true
+		l.printToLogs = true
 		return
 	}
 
@@ -91,14 +95,21 @@ func (l *SlackLogger) FinishThread(msg string, args ...interface{}) {
 		return
 	}
 
+	if l.printToLogs {
+		log.Printf(msg, args...)
+	}
+
 	close(l.threadDoneCh)
 
-	l.client.UpdateMessage(
+	_, _, _, err := l.client.UpdateMessage(
 		l.channelID,
 		l.threadTS,
 		slack.MsgOptionText(fmt.Sprintf(msg, args...), false),
 		slack.MsgOptionAsUser(true),
 	)
+	if err != nil {
+		log.Println("failed to update main message", err)
+	}
 }
 
 func (l *SlackLogger) Debug(msg string, args ...interface{}) {
@@ -116,6 +127,10 @@ func (l *SlackLogger) Info(msg string, args ...interface{}) {
 		return
 	}
 
+	if l.printToLogs {
+		log.Printf(msg, args...)
+	}
+
 	_, _, err := l.client.PostMessage(
 		l.channel,
 		slack.MsgOptionText(fmt.Sprintf(msg, args...), false), // TODO: needs app slug, release sequense
@@ -123,7 +138,7 @@ func (l *SlackLogger) Info(msg string, args ...interface{}) {
 		slack.MsgOptionAsUser(true),
 	)
 	if err != nil {
-		log.Println("failed to send slack message", err)
+		log.Println("failed to send slack info message", err)
 	}
 }
 
@@ -283,37 +298,30 @@ func (l *SlackLogger) Error(err error) {
 	c.Println(fmt.Sprintf("%#v", err))
 }
 
-func (l *SlackLogger) startMessageThread() error {
-	channelID, timestamp, err := l.client.PostMessage(
-		l.channel,
-		slack.MsgOptionText("Starting grid test", false), // TODO: needs app slug, release sequense
-		slack.MsgOptionAsUser(true),
-	)
-	if err != nil {
-		return errors.Wrap(err, "failed to send slack message")
-	}
-
-	l.threadTS = timestamp
-	l.channelID = channelID
-	return nil
-}
-
 func (l *SlackLogger) monitorThread() {
 	spinners := []string{"|", "/", "--", "\\", "|", "/", "--", "\\"}
 	spinnerIdx := 0
+	delayPeriod := 5 * time.Second
 	for {
 		select {
 		case <-l.threadDoneCh:
 			return
-		case <-time.After(1 * time.Second):
+		case <-time.After(delayPeriod):
 			msg := fmt.Sprintf("%s %s", l.initialMessage, spinners[spinnerIdx])
-			l.client.UpdateMessage(
+			_, _, _, err := l.client.UpdateMessage(
 				l.channelID,
 				l.threadTS,
 				slack.MsgOptionText(msg, false),
 				slack.MsgOptionAsUser(true),
 			)
 			spinnerIdx = (spinnerIdx + 1) % len(spinners)
+
+			if err == nil {
+				delayPeriod = 5 * time.Second
+			} else {
+				log.Println("failed to update spinner", err)
+				delayPeriod = 15 * time.Second
+			}
 		}
 	}
 }
