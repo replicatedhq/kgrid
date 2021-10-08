@@ -19,9 +19,12 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
 	kuberneteserrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -56,8 +59,6 @@ type OutcomeReconciler struct {
 //
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *OutcomeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	// This only runs on create events to get the statuses of any pods that might have completed
-	// before this was created. The test pods controller will update this Outcome with future changes.
 	instance := &kgridv1alpha1.Outcome{}
 	err := r.Get(context.Background(), req.NamespacedName, instance)
 	if err != nil {
@@ -76,32 +77,64 @@ func (r *OutcomeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, errors.Wrap(err, "failed to create client")
 	}
 
-	// TODO this could become inefficient if there get to be a lot of test pods
+	var testIDs []string
+	for _, test := range instance.Tests {
+		testIDs = append(testIDs, test.ID)
+	}
+	selector := fmt.Sprintf("%s in (%s)", TestPodLabelKey, strings.Join(testIDs, ", "))
 	pods, err := clientset.CoreV1().Pods(instance.Namespace).List(ctx, metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("%s=", TestPodLabelKey),
+		LabelSelector: selector,
 	})
 	if err != nil {
 		return ctrl.Result{}, errors.Wrap(err, "failed to list test pods")
 	}
 
+	var testIDsToPods = map[string]*corev1.Pod{}
 	for _, pod := range pods.Items {
 		podTestID := pod.Labels[TestPodLabelKey]
+		testIDsToPods[podTestID] = &pod
+	}
 
-		for i, test := range instance.Tests {
-			if test.ID != podTestID {
+	finalized := true
+	updated := false
+
+	for i, test := range instance.Tests {
+		pod, ok := testIDsToPods[test.ID]
+		if !ok {
+			// The test pod is not in the cluster. Unless we already have a final Pass/Fail result
+			// for it then the final state will be Unknown.
+			if test.Result == kgridv1alpha1.TestResultPass || test.Result == kgridv1alpha1.TestResultFail || test.Result == kgridv1alpha1.TestResultUnknown {
 				continue
 			}
+			instance.Tests[i].Result = kgridv1alpha1.TestResultUnknown
+			updated = true
+			continue
+		}
 
-			instance.Tests[i].Result = getTestResultFromPod(&pod)
+		result := getTestResultFromPod(pod)
+		if result == kgridv1alpha1.TestResultPending {
+			finalized = false
+		}
+		if test.Result != result {
+			instance.Tests[i].Result = result
+			updated = true
 		}
 	}
 
-	_, err = updateOutcome(ctx, instance)
-	if err != nil {
+	if updated {
+		_, err = updateOutcome(ctx, instance)
+		if err != nil {
+			return ctrl.Result{}, errors.Wrap(err, "failed to update outcome")
+		}
+	}
+
+	if finalized {
 		return ctrl.Result{}, nil
 	}
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{
+		RequeueAfter: time.Second * 10,
+	}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -125,25 +158,6 @@ func (r *OutcomeReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&kgridv1alpha1.Outcome{}).
 		WithEventFilter(isCreate).
 		Complete(r)
-}
-
-func listOutcomes(ctx context.Context, namespace string) (*kgridv1alpha1.OutcomeList, error) {
-	cfg, err := config.GetRESTConfig()
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get config")
-	}
-
-	clientset, err := kgridclientset.NewForConfig(cfg)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create app client")
-	}
-
-	outcomes, err := clientset.Outcomes(namespace).List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to list outcomes")
-	}
-
-	return outcomes, nil
 }
 
 func createOutcome(ctx context.Context, outcome *kgridv1alpha1.Outcome) error {
@@ -186,4 +200,19 @@ func updateOutcome(ctx context.Context, outcome *kgridv1alpha1.Outcome) (*kgridv
 	}
 
 	return outcome, nil
+}
+
+func getTestResultFromPod(pod *corev1.Pod) kgridv1alpha1.TestResult {
+	switch pod.Status.Phase {
+	case corev1.PodSucceeded:
+		return kgridv1alpha1.TestResultPass
+	case corev1.PodPending, corev1.PodRunning:
+		return kgridv1alpha1.TestResultPending
+	case corev1.PodFailed:
+		return kgridv1alpha1.TestResultFail
+	case corev1.PodUnknown:
+		return kgridv1alpha1.TestResultUnknown
+	}
+
+	return kgridv1alpha1.TestResultUnknown
 }
