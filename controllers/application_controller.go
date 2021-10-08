@@ -40,6 +40,8 @@ import (
 	gridtypes "github.com/replicatedhq/kgrid/pkg/kgrid/grid/types"
 )
 
+const TestPodLabelKey = "kgrid.replicated.com/test"
+
 // ApplicationReconciler reconciles a Application object
 type ApplicationReconciler struct {
 	client.Client
@@ -51,6 +53,9 @@ type ApplicationReconciler struct {
 //+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=applications/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=applications/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",namespace=kgrid-system,resources=secrets,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="",namespace=kgrid-system,resources=pods,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="",namespace=kgrid-system,resources=pods/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups="",namespace=kgrid-system,resources=pods/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
