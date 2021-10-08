@@ -89,17 +89,17 @@ func (r *OutcomeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, errors.Wrap(err, "failed to list test pods")
 	}
 
-	var testIDsToPods = map[string]*corev1.Pod{}
+	var testIDsToResult = map[string]kgridv1alpha1.TestResult{}
 	for _, pod := range pods.Items {
 		podTestID := pod.Labels[TestPodLabelKey]
-		testIDsToPods[podTestID] = &pod
+		testIDsToResult[podTestID] = getTestResultFromPod(&pod)
 	}
 
 	finalized := true
 	updated := false
 
 	for i, test := range instance.Tests {
-		pod, ok := testIDsToPods[test.ID]
+		result, ok := testIDsToResult[test.ID]
 		if !ok {
 			// The test pod is not in the cluster. Unless we already have a final Pass/Fail result
 			// for it then the final state will be Unknown.
@@ -111,7 +111,6 @@ func (r *OutcomeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			continue
 		}
 
-		result := getTestResultFromPod(pod)
 		if result == kgridv1alpha1.TestResultPending {
 			finalized = false
 		}
