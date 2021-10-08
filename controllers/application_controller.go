@@ -50,6 +50,7 @@ type ApplicationReconciler struct {
 //+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=applications,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=applications/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=kgrid.replicated.com,namespace=kgrid-system,resources=applications/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",namespace=kgrid-system,resources=secrets,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
