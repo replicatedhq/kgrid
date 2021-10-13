@@ -238,6 +238,7 @@ func createNewEKSCluter(gridName string, newEKSCluster *types.EKSNewClusterSpec,
 	kubeConfig, err := GetEKSClusterKubeConfig(newEKSCluster.Region, accessKeyID, secretAccessKey, newEKSCluster.Name)
 	if err != nil {
 		completedCh <- fmt.Sprintf("failed to get kubeconfig from eks cluster: %s", err.Error())
+		return
 	}
 
 	clusterConfig := types.ClusterConfig{
@@ -269,17 +270,24 @@ func createNewEKSCluter(gridName string, newEKSCluster *types.EKSNewClusterSpec,
 		}
 	}()
 
-	if err := ensureEKSAuthMap(&clusterConfig, vpc.RoleArn); err != nil {
-		completedCh <- fmt.Sprintf("failed to ensure aws-auth configmap: %s", err.Error())
+	if err := waitForAPIServer(&clusterConfig); err != nil {
+		completedCh <- fmt.Sprintf("failed to wait for API server: %s", err.Error())
+		return
 	}
 
-	if err := ensureEKSDefaultStorageClass(&clusterConfig); err != nil {
-		completedCh <- fmt.Sprintf("failed to ensure default storage class: %s", err.Error())
+	if err := ensureEKSAuthMap(&clusterConfig, vpc.RoleArn); err != nil {
+		completedCh <- fmt.Sprintf("failed to ensure aws-auth configmap: %s", err.Error())
+		return
 	}
 
 	log.Info("Waiting for nodes to become ready")
 	if err := waitForNodes(&clusterConfig, nodeGroup); err != nil {
 		completedCh <- fmt.Sprintf("failed to wait for nodes to join: %s", err.Error())
+		return
+	}
+
+	if err := ensureEKSDefaultStorageClass(&clusterConfig); err != nil {
+		completedCh <- fmt.Sprintf("failed to ensure default storage class: %s", err.Error())
 		return
 	}
 
@@ -340,10 +348,13 @@ volumeBindingMode: WaitForFirstConsumer`
 
 func waitForNodes(c *types.ClusterConfig, nodeGroup *ekstypes.Nodegroup) error {
 	sleepTime := 10 * time.Second
+	var lastError error
 	for i := 0; i < 24; i++ {
 		nodes, err := kubectl.GetNodes(c)
 		if err != nil {
-			return errors.Wrap(err, "failed to get nodes")
+			lastError = err
+			time.Sleep(sleepTime)
+			continue
 		}
 
 		numReady := 0
@@ -367,7 +378,22 @@ func waitForNodes(c *types.ClusterConfig, nodeGroup *ekstypes.Nodegroup) error {
 		time.Sleep(sleepTime)
 	}
 
-	return errors.New("timed out")
+	return errors.Errorf("timed out, last error was %v", lastError)
+}
+
+func waitForAPIServer(c *types.ClusterConfig) error {
+	sleepTime := 10 * time.Second
+	var lastError error
+	for i := 0; i < 24; i++ {
+		lastError = kubectl.CheckAPIServer(c)
+		if lastError == nil {
+			return nil
+		}
+
+		time.Sleep(sleepTime)
+	}
+
+	return errors.Errorf("timed out, last error was %v", lastError)
 }
 
 func generateClusterName() string {
