@@ -82,7 +82,7 @@ func generateSupportBundle(c *types.ClusterConfig, log logger.Logger) (string, e
 }
 
 func uploadSupportBundle(path string, log logger.Logger) error {
-	if os.Getenv("AWS_BUCKET") == "" {
+	if os.Getenv("AWS_S3_BUCKET") == "" {
 		log.Info("bucket not specified, not going to upload the support bundle.")
 		return nil
 	}
