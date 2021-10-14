@@ -50,18 +50,18 @@ func Deploy(g *types.GridConfig, a *types.Application, log logger.Logger) (final
 					log.Info("generating support bundle for cluster %s\n", g.ClusterConfigs[i].Name)
 
 					wg.Add(1)
-					go func(clusterName string) {
+					go func(clusterConfig *types.ClusterConfig, log logger.Logger) {
 						defer wg.Done()
-						path, err := generateSupportBundle(g.ClusterConfigs[i], log)
+						path, err := generateSupportBundle(clusterConfig, log)
 						if err != nil {
-							log.Info("failed to generate a support bundle for cluster %s, %v", clusterName, err)
+							log.Info("failed to generate a support bundle for cluster %s, %v", clusterConfig.Name, err)
 							return
 						}
 						if err := uploadSupportBundle(path, log); err != nil {
-							log.Info("failed to upload support bundle for cluster %s: %v", clusterName, err)
+							log.Info("failed to upload support bundle for cluster %s: %v", clusterConfig.Name, err)
 							return
 						}
-					}(g.ClusterConfigs[i].Name)
+					}(g.ClusterConfigs[i], log)
 				} else {
 					deployStatuses[i] = DeploySucceeded
 				}
