@@ -160,6 +160,7 @@ func deployKOTSApplication(c *types.ClusterConfig, kotsAppSpec *types.KOTSApplic
 		"--namespace", namespace,
 		"--license-file", pathToLicense,
 		"--shared-password", "password",
+		"--wait-duration", "10m",
 		"--port-forward=false",
 		"--kubeconfig", kubeconfigFile.Name(),
 	}
