@@ -103,8 +103,9 @@ func (r *ApplicationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func getTestID(cluster string, version string, channelID string, channelSequence uint) string {
+func getTestID(runID string, cluster string, version string, channelID string, channelSequence uint) string {
 	m := map[string]interface{}{
+		"runID":           runID,
 		"cluster":         cluster,
 		"version":         version,
 		"channelID":       channelID,
@@ -161,7 +162,7 @@ func createAppTests(ctx context.Context, namespace string, app *kgridv1alpha1.Ap
 
 				foundCluster = true
 
-				testID := getTestID(gridCluster.Name, version, channelID, channelSequence)
+				testID := getTestID(runID, gridCluster.Name, version, channelID, channelSequence)
 				pod, err := clientset.CoreV1().Pods(app.Namespace).Get(ctx, getPodName(testID), metav1.GetOptions{})
 				if err == nil {
 					tests = append(tests, kgridv1alpha1.Test{
