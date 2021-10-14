@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -10,43 +11,71 @@ import (
 	"github.com/replicatedhq/kgrid/pkg/kgrid/logger"
 )
 
+type DeployStatus string
+
+const (
+	DeployInProgress DeployStatus = "in_progress"
+	DeployFailed     DeployStatus = "failed"
+	DeploySucceeded  DeployStatus = "succeeded"
+)
+
 func Deploy(g *types.GridConfig, a *types.Application, log logger.Logger) (finalError error) {
-	completed := map[int]bool{}
-	completedChans := make([]chan string, len(g.ClusterConfigs))
+	deployStatuses := map[int]DeployStatus{}
+	deployChans := make([]chan string, len(g.ClusterConfigs))
 	for i := range g.ClusterConfigs {
-		completedChans[i] = make(chan string)
-		completed[i] = false
+		deployStatuses[i] = DeployInProgress
+		deployChans[i] = make(chan string)
 	}
 
 	finished := make(chan bool)
 	go func() {
-		cases := make([]reflect.SelectCase, len(completedChans))
-		for i, ch := range completedChans {
+		cases := make([]reflect.SelectCase, len(deployChans))
+		for i, ch := range deployChans {
 			cases[i] = reflect.SelectCase{
 				Dir:  reflect.SelectRecv,
 				Chan: reflect.ValueOf(ch),
 			}
 		}
 
-		for {
-			i, completedErr, ok := reflect.Select(cases)
-			if ok {
-				if completedErr.String() != "" {
-					finalError = errors.New("application failed to deploy")
-					log.Info("deploy to cluster %s failed with error: %s\n", g.ClusterConfigs[i].Name, completedErr.String())
-				}
+		wg := sync.WaitGroup{}
 
-				completed[i] = true
+		for {
+			i, deployErr, ok := reflect.Select(cases)
+			if ok {
+				if deployErr.String() != "" {
+					finalError = errors.New("application failed to deploy")
+					deployStatuses[i] = DeployFailed
+
+					log.Info("deploy to cluster %s failed with error: %s\n", g.ClusterConfigs[i].Name, deployErr.String())
+					log.Info("generating support bundle for cluster %s\n", g.ClusterConfigs[i].Name)
+
+					wg.Add(1)
+					go func(clusterConfig *types.ClusterConfig, log logger.Logger) {
+						defer wg.Done()
+						path, err := generateSupportBundle(clusterConfig, log)
+						if err != nil {
+							log.Info("failed to generate a support bundle for cluster %s, %v", clusterConfig.Name, err)
+							return
+						}
+						if err := uploadSupportBundle(path, log); err != nil {
+							log.Info("failed to upload support bundle for cluster %s: %v", clusterConfig.Name, err)
+							return
+						}
+					}(g.ClusterConfigs[i], log)
+				} else {
+					deployStatuses[i] = DeploySucceeded
+				}
 			}
 
 			allCompleted := true
-			for _, v := range completed {
-				if !v {
+			for _, v := range deployStatuses {
+				if v != DeploySucceeded && v != DeployFailed {
 					allCompleted = false
 				}
 			}
 
 			if allCompleted {
+				wg.Wait()
 				finished <- true
 				return
 			}
@@ -59,13 +88,13 @@ func Deploy(g *types.GridConfig, a *types.Application, log logger.Logger) (final
 			go func() {
 				pathToKOTSBinary, err := downloadKOTSBinary(a.Spec.KOTSApplicationSpec.Version)
 				if err != nil {
-					completedChans[i] <- errors.Wrapf(err, "failed to get kots %s binary", a.Spec.KOTSApplicationSpec.Version).Error()
+					deployChans[i] <- errors.Wrapf(err, "failed to get kots %s binary", a.Spec.KOTSApplicationSpec.Version).Error()
 					return
 				}
 
 				err = deployKOTSApplication(c, a.Spec.KOTSApplicationSpec, pathToKOTSBinary, log)
 				if err != nil {
-					completedChans[i] <- err.Error()
+					deployChans[i] <- err.Error()
 					return
 				}
 
@@ -73,19 +102,19 @@ func Deploy(g *types.GridConfig, a *types.Application, log logger.Logger) (final
 				for {
 					appStatus, err := getKOTSApplicationStatus(c, a.Spec.KOTSApplicationSpec, pathToKOTSBinary, log)
 					if err != nil {
-						completedChans[i] <- err.Error()
+						deployChans[i] <- err.Error()
 						return
 					}
 
 					statusString, _ := json.MarshalIndent(appStatus, "", "  ")
 					log.Info("```%s```", statusString)
 					if appStatus.AppStatus.State == "ready" {
-						completedChans[i] <- ""
+						deployChans[i] <- ""
 						return
 					}
 
 					if time.Now().After(waitUntil) {
-						completedChans[i] <- "timed out waiting for app ready status"
+						deployChans[i] <- "timed out waiting for app ready status"
 						return
 					}
 

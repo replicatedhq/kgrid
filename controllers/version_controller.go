@@ -79,20 +79,21 @@ func (r *VersionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	tests := []kgridv1alpha1.Test{}
+	runID := instance.Labels["runId"]
 
 	for _, app := range apps.Items {
 		if app.Spec.KOTS == nil || app.Spec.KOTS.Version != "latest" {
 			continue
 		}
 
-		appTests, err := createAppTests(ctx, app.Namespace, &app, instance.Spec.KOTS.Latest, logger)
+		appTests, err := createAppTests(ctx, app.Namespace, &app, instance.Spec.KOTS.Latest, runID, logger)
 		if err != nil {
 			return ctrl.Result{}, errors.Wrap(err, "failed to create application test")
 		}
 		tests = append(tests, appTests...)
 	}
 
-	outcomeName := instance.Labels["runId"]
+	outcomeName := runID
 	if outcomeName != "" {
 		outcome := &kgridv1alpha1.Outcome{
 			ObjectMeta: metav1.ObjectMeta{

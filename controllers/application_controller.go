@@ -88,7 +88,7 @@ func (r *ApplicationReconciler) createJob(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, errors.Wrap(err, "failed to find version to test application with")
 	}
 
-	_, err = createAppTests(ctx, instance.Namespace, instance, version, logger)
+	_, err = createAppTests(ctx, instance.Namespace, instance, version, "", logger)
 	if err != nil {
 		return ctrl.Result{}, errors.Wrap(err, "failed to get application instance")
 	}
@@ -118,7 +118,7 @@ func getPodName(testID string) string {
 	return fmt.Sprintf("test-%s", testID)
 }
 
-func createAppTests(ctx context.Context, namespace string, app *kgridv1alpha1.Application, version string, logger logr.Logger) ([]kgridv1alpha1.Test, error) {
+func createAppTests(ctx context.Context, namespace string, app *kgridv1alpha1.Application, version string, runID string, logger logr.Logger) ([]kgridv1alpha1.Test, error) {
 	channelID := ""
 	channelSequence := uint(0)
 	appClusters := []string{}
@@ -184,7 +184,7 @@ func createAppTests(ctx context.Context, namespace string, app *kgridv1alpha1.Ap
 					return nil, errors.Wrap(err, "failed to create test config")
 				}
 
-				podSpec := getTestPodSpec(testID, &gridCluster, app)
+				podSpec := getTestPodSpec(runID, testID, &gridCluster, app)
 				_, err = clientset.CoreV1().Pods(app.Namespace).Create(ctx, podSpec, metav1.CreateOptions{})
 				if err != nil {
 					return nil, errors.Wrap(err, "failed to create test")
@@ -205,8 +205,8 @@ func createAppTests(ctx context.Context, namespace string, app *kgridv1alpha1.Ap
 	return tests, nil
 }
 
-func getTestPodSpec(testID string, gridCluster *kgridv1alpha1.Cluster, app *kgridv1alpha1.Application) *corev1.Pod {
-	// TODO: pass test ID to grid pod/command
+func getTestPodSpec(runID string, testID string, gridCluster *kgridv1alpha1.Cluster, app *kgridv1alpha1.Application) *corev1.Pod {
+	trueVal := true
 	podSpec := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: getPodName(testID),
@@ -231,6 +231,64 @@ func getTestPodSpec(testID string, gridCluster *kgridv1alpha1.Cluster, app *kgri
 						"/kgrid-specs/grid.yaml",
 						"--app",
 						"/kgrid-specs/app.yaml",
+					},
+					Env: []corev1.EnvVar{
+						{
+							Name:  "RUN_ID",
+							Value: runID,
+						},
+						{
+							Name:  "TEST_ID",
+							Value: testID,
+						},
+						{
+							Name: "AWS_S3_ACCESS_KEY_ID",
+							ValueFrom: &corev1.EnvVarSource{
+								SecretKeyRef: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "kgrid-supportbundles",
+									},
+									Key:      "accesskey",
+									Optional: &trueVal,
+								},
+							},
+						},
+						{
+							Name: "AWS_S3_SECRET_ACCESS_KEY",
+							ValueFrom: &corev1.EnvVarSource{
+								SecretKeyRef: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "kgrid-supportbundles",
+									},
+									Key:      "secretkey",
+									Optional: &trueVal,
+								},
+							},
+						},
+						{
+							Name: "AWS_S3_BUCKET",
+							ValueFrom: &corev1.EnvVarSource{
+								SecretKeyRef: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "kgrid-supportbundles",
+									},
+									Key:      "bucket",
+									Optional: &trueVal,
+								},
+							},
+						},
+						{
+							Name: "AWS_S3_REGION",
+							ValueFrom: &corev1.EnvVarSource{
+								SecretKeyRef: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "kgrid-supportbundles",
+									},
+									Key:      "region",
+									Optional: &trueVal,
+								},
+							},
+						},
 					},
 					VolumeMounts: []corev1.VolumeMount{
 						{

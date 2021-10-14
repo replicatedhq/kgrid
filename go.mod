@@ -3,6 +3,8 @@ module github.com/replicatedhq/kgrid
 go 1.15
 
 require (
+	github.com/Microsoft/go-winio v0.5.0 // indirect
+	github.com/aws/aws-sdk-go v1.38.45
 	github.com/aws/aws-sdk-go-v2 v0.31.0
 	github.com/aws/aws-sdk-go-v2/config v0.4.0
 	github.com/aws/aws-sdk-go-v2/credentials v0.2.0
@@ -12,6 +14,7 @@ require (
 	github.com/aws/smithy-go v0.5.0
 	github.com/fatih/color v1.10.0
 	github.com/go-logr/logr v0.4.0
+	github.com/google/uuid v1.2.0 // indirect
 	github.com/gosimple/slug v1.9.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/mattn/go-isatty v0.0.12
@@ -19,12 +22,15 @@ require (
 	github.com/onsi/gomega v1.10.2
 	github.com/pkg/errors v0.9.1
 	github.com/replicatedhq/kots v1.41.1
+	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/slack-go/slack v0.8.0
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.7.0
 	github.com/tj/go-spin v1.1.0
+	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a // indirect
+	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
 	k8s.io/api v0.21.0
 	k8s.io/apiextensions-apiserver v0.20.5
 	k8s.io/apimachinery v0.21.0
