@@ -147,6 +147,7 @@ func deployKOTSApplication(c *types.ClusterConfig, kotsAppSpec *types.KOTSApplic
 		return errors.Wrap(err, "failed to create temp file")
 	}
 	defer os.RemoveAll(kubeconfigFile.Name())
+
 	if err := ioutil.WriteFile(kubeconfigFile.Name(), []byte(c.Kubeconfig), 0644); err != nil {
 		return errors.Wrap(err, "failed to create kubeconfig")
 	}
@@ -325,6 +326,7 @@ func downloadKOTSBinary(version string) (string, error) {
 				return "", errors.Wrap(err, "failed to os create file")
 			}
 			defer f.Close()
+
 			if _, err := io.Copy(f, tarReader); err != nil {
 				return "", errors.Wrap(err, "failed to copy kots binary")
 			}
