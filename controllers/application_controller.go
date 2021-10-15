@@ -249,7 +249,7 @@ func getTestPodSpec(runID string, testID string, gridCluster *kgridv1alpha1.Clus
 									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "kgrid-supportbundles",
 									},
-									Key:      "accesskey",
+									Key:      "accessKey",
 									Optional: &trueVal,
 								},
 							},
@@ -261,7 +261,7 @@ func getTestPodSpec(runID string, testID string, gridCluster *kgridv1alpha1.Clus
 									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "kgrid-supportbundles",
 									},
-									Key:      "secretkey",
+									Key:      "secretKey",
 									Optional: &trueVal,
 								},
 							},
