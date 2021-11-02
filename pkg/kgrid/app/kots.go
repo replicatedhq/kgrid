@@ -113,12 +113,12 @@ func getKOTSApplicationStatus(c *types.ClusterConfig, kotsAppSpec *types.KOTSApp
 	go func() {
 		done <- cmd.Wait()
 	}()
-	timeout := time.After(time.Second * 5)
+	timeout := time.After(time.Second * 20)
 
 	select {
 	case <-timeout:
 		cmd.Process.Kill()
-		return nil, errors.Errorf("timedout waiting for app ready.  received std out: %s\n", stdout.String())
+		return nil, errors.Errorf("timedout waiting for app ready.\nSTDOUT:%s\nSTDERR:%s", stdout.String(), stderr.String())
 	case err := <-done:
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to run kots for status check\nSTDOUT:%s\nSTDERR:%s", stdout.String(), stderr.String())

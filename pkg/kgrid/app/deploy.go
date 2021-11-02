@@ -99,26 +99,37 @@ func Deploy(g *types.GridConfig, a *types.Application, log logger.Logger) (final
 				}
 
 				waitUntil := time.Now().Add(5 * time.Minute)
+				var lastError error
 				for {
 					appStatus, err := getKOTSApplicationStatus(c, a.Spec.KOTSApplicationSpec, pathToKOTSBinary, log)
 					if err != nil {
-						deployChans[i] <- err.Error()
-						return
+						lastError = err
+						continue
 					}
 
 					statusString, _ := json.MarshalIndent(appStatus, "", "  ")
 					log.Info("```%s```", statusString)
 					if appStatus.AppStatus.State == "ready" {
-						deployChans[i] <- ""
-						return
+						lastError = nil
+						break
 					}
 
 					if time.Now().After(waitUntil) {
-						deployChans[i] <- "timed out waiting for app ready status"
-						return
+						if lastError != nil {
+							lastError = errors.Wrap(lastError, "timed out waiting for app ready status")
+						} else {
+							lastError = errors.New("timed out waiting for app ready status")
+						}
+						break
 					}
 
 					time.Sleep(10 * time.Second)
+				}
+
+				if lastError != nil {
+					deployChans[i] <- lastError.Error()
+				} else {
+					deployChans[i] <- ""
 				}
 			}()
 		}
