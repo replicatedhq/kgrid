@@ -10,6 +10,13 @@ spec:
     spec:
       containers:
       - name: kube-rbac-proxy
+        resources:
+          requests:
+            cpu: 5m
+            memory: 10Mi
+          limits:
+            cpu: 10m
+            memory: 25Mi
         image: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
         args:
         - "--secure-listen-address=0.0.0.0:8443"
@@ -20,6 +27,13 @@ spec:
         - containerPort: 8443
           name: https
       - name: manager
+        resources:
+          requests:
+            cpu: 8m
+            memory: 30Mi
+          limits:
+            cpu: 15m
+            memory: 40Mi
         args:
         - "--health-probe-bind-address=:8081"
         - "--metrics-bind-address=127.0.0.1:8080"
