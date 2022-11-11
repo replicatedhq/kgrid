@@ -15,6 +15,9 @@ VERSION ?=`git describe --tags --dirty || echo "v0.0.0"`
 SEMVER ?= `(git describe --tags --dirty || echo "v0.0.0") | tr -d 'v'`
 GIT_SHA ?=`git rev-parse HEAD || echo ""`
 DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"`
+BUILDFLAGS = -tags='netgo containers_image_ostree_stub exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp' -installsuffix netgo
+
+export CGO_ENABLED=0
 
 define LDFLAGS
 -ldflags "\
@@ -60,7 +63,7 @@ IMG ?= localhost:32000/kgrid/controller:${VERSION}
 IMG_KGRID ?= localhost:32000/kgrid/kgird:${VERSION}
 
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
+CRD_OPTIONS ?= "crd"
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -89,7 +92,7 @@ help: ## Display this help.
 
 .PHONY: schemas
 schemas: fmt vet
-	go build ${LDFLAGS} -o bin/schemagen github.com/replicatedhq/kgrid/cmd/schemagen
+	go build ${LDFLAGS} -o bin/schemagen $(BUILDFLAGS) github.com/replicatedhq/kgrid/cmd/schemagen
 	./bin/schemagen --output-dir ./schemas
 
 ##@ Development
@@ -148,9 +151,13 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 	$(KUSTOMIZE) build config/default | kubectl delete -f -
 
 
-CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
-controller-gen: ## Download controller-gen locally if necessary.
-	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.1)
+controller-gen:
+ifeq (, $(shell which controller-gen))
+	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.10.0
+CONTROLLER_GEN=$(shell go env GOPATH)/bin/controller-gen
+else
+CONTROLLER_GEN=$(shell which controller-gen)
+endif
 
 KUSTOMIZE = $(shell pwd)/bin/kustomize
 kustomize: ## Download kustomize locally if necessary.
@@ -229,7 +236,7 @@ catalog-push: ## Push a catalog image.
 .PHONY: client-gen
 client-gen:
 ifeq (, $(shell which client-gen))
-	go get k8s.io/code-generator/cmd/client-gen@v0.21.1
+	go install k8s.io/code-generator/cmd/client-gen@v0.25.4
 CLIENT_GEN=$(shell go env GOPATH)/bin/client-gen
 else
 CLIENT_GEN=$(shell which client-gen)
