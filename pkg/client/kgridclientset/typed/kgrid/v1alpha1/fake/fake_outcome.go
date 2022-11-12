@@ -104,7 +104,7 @@ func (c *FakeOutcomes) Update(ctx context.Context, outcome *v1alpha1.Outcome, op
 // Delete takes name of the outcome and deletes it. Returns an error if one occurs.
 func (c *FakeOutcomes) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(outcomesResource, c.ns, name), &v1alpha1.Outcome{})
+		Invokes(testing.NewDeleteActionWithOptions(outcomesResource, c.ns, name, opts), &v1alpha1.Outcome{})
 
 	return err
 }

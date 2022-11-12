@@ -1,10 +1,9 @@
-
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.10.0
   creationTimestamp: null
   name: applications.kgrid.replicated.com
 spec:
@@ -78,6 +77,10 @@ spec:
                                   type: string
                                 default:
                                   type: string
+                                filename:
+                                  type: string
+                                repeatableItem:
+                                  type: string
                                 value:
                                   type: string
                                 valuePlaintext:
@@ -115,9 +118,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

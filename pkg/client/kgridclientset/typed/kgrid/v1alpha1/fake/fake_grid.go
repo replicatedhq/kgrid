@@ -116,7 +116,7 @@ func (c *FakeGrids) UpdateStatus(ctx context.Context, grid *v1alpha1.Grid, opts 
 // Delete takes name of the grid and deletes it. Returns an error if one occurs.
 func (c *FakeGrids) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(gridsResource, c.ns, name), &v1alpha1.Grid{})
+		Invokes(testing.NewDeleteActionWithOptions(gridsResource, c.ns, name, opts), &v1alpha1.Grid{})
 
 	return err
 }

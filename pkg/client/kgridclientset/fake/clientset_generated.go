@@ -73,7 +73,10 @@ func (c *Clientset) Tracker() testing.ObjectTracker {
 	return c.tracker
 }
 
-var _ clientset.Interface = &Clientset{}
+var (
+	_ clientset.Interface = &Clientset{}
+	_ testing.FakeClient  = &Clientset{}
+)
 
 // KgridV1alpha1 retrieves the KgridV1alpha1Client
 func (c *Clientset) KgridV1alpha1() kgridv1alpha1.KgridV1alpha1Interface {
