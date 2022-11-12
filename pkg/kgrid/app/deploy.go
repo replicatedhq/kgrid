@@ -20,6 +20,10 @@ const (
 )
 
 func Deploy(g *types.GridConfig, a *types.Application, log logger.Logger) (finalError error) {
+	if len(g.ClusterConfigs) == 0 {
+		return errors.New("no clusters configured")
+	}
+
 	deployStatuses := map[int]DeployStatus{}
 	deployChans := make([]chan string, len(g.ClusterConfigs))
 	for i := range g.ClusterConfigs {

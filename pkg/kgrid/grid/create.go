@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	ekstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/pkg/errors"
+	kerrors "github.com/replicatedhq/kgrid/pkg/errors"
 	"github.com/replicatedhq/kgrid/pkg/kgrid/grid/types"
 	"github.com/replicatedhq/kgrid/pkg/kgrid/kubectl"
 	"github.com/replicatedhq/kgrid/pkg/kgrid/logger"
@@ -34,6 +35,7 @@ func Create(configFilePath string, g *types.Grid, log logger.Logger) error {
 
 	// start listening for completed events
 	finished := make(chan bool)
+	createErrors := []error{}
 	go func() {
 		cases := make([]reflect.SelectCase, len(completedChans))
 		for i, ch := range completedChans {
@@ -46,8 +48,14 @@ func Create(configFilePath string, g *types.Grid, log logger.Logger) error {
 		for {
 			i, completedErr, ok := reflect.Select(cases)
 			if ok {
+				clusterName := g.Spec.Clusters[i].GetNameForLogging()
+				if clusterName == "" {
+					clusterName = fmt.Sprintf("%d", i)
+				}
+
 				if completedErr.String() != "" {
-					fmt.Printf("cluster %s failed with error: %s\n", g.Spec.Clusters[i].GetNameForLogging(), completedErr.String())
+					err := errors.Wrapf(errors.New(completedErr.String()), "create cluster %s", clusterName)
+					createErrors = append(createErrors, err)
 				}
 
 				completed[i] = true
@@ -74,6 +82,10 @@ func Create(configFilePath string, g *types.Grid, log logger.Logger) error {
 
 	// wait for all channels to be closed
 	<-finished
+
+	if len(createErrors) > 0 {
+		return &kerrors.MultiError{Errors: createErrors}
+	}
 
 	return nil
 }
