@@ -2,6 +2,8 @@ package cli
 
 import (
 	"fmt"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,6 +18,7 @@ var (
 )
 
 func RootCmd() *cobra.Command {
+	go http.ListenAndServe("0.0.0.0:6060", nil)
 	cmd := &cobra.Command{
 		Use:           "grid",
 		Short:         "",
