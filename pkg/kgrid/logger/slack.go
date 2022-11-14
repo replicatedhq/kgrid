@@ -101,6 +101,11 @@ func (l *SlackLogger) FinishThread(msg string, args ...interface{}) {
 		log.Printf(msg, args...)
 	}
 
+	// this could be nil if StartThread failed before creating channel
+	if l.threadDoneCh == nil {
+		return
+	}
+
 	close(l.threadDoneCh)
 
 	_, _, _, err := l.client.UpdateMessage(
