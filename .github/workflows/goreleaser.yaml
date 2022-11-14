@@ -38,6 +38,10 @@ jobs:
     needs: goreleaser
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/setup-go@v2.1.3
+      with:
+        go-version: '^1.19.3'
+
     - name: Checkout
       uses: actions/checkout@v2
 
@@ -69,7 +73,6 @@ jobs:
     - name: make grid manifests
       run: |
         set -x
-        export SEMVER=${GITHUB_REF:1}
         export IMG=replicated/kgrid-manager:${{ steps.get_tag.outputs.GIT_TAG }}
         make bundle-asset
 
