@@ -159,9 +159,13 @@ else
 CONTROLLER_GEN=$(shell which controller-gen)
 endif
 
-KUSTOMIZE = $(shell pwd)/bin/kustomize
-kustomize: ## Download kustomize locally if necessary.
-	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
+kustomize:
+ifeq (, $(shell which kustomize))
+	go install sigs.k8s.io/kustomize/kustomize/v4@v4.5.4
+KUSTOMIZE=$(shell go env GOPATH)/bin/kustomize
+else
+KUSTOMIZE=$(shell which kustomize)
+endif
 
 # go-get-tool will 'go get' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
